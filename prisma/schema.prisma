@@ -1,0 +1,259 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum LeagueRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MatchStage {
+  GROUPS
+  ROUND_32
+  ROUND_16
+  QUARTER_FINALS
+  SEMI_FINALS
+  THIRD_PLACE
+  FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  PLAYING
+  FINISHED
+}
+
+model User {
+  id               String                      @id @default(uuid())
+  name             String?
+  email            String                      @unique
+  passwordHash     String?
+  image            String?
+  role             Role                        @default(USER)
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  memberships      LeagueMembership[]
+  accounts         Account[]
+  sessions         Session[]
+  predictions      Prediction[]
+  bonusPredictions TournamentBonusPrediction[]
+  auditLogs        AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model League {
+  id             String             @id @default(uuid())
+  name           String
+  inviteCode     String             @unique
+  departments    String?            // JSON string array of sectors/departments
+  transferAlias  String?
+  transferAmount Float?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  memberships    LeagueMembership[]
+}
+
+model LeagueMembership {
+  id            String     @id @default(uuid())
+  userId        String
+  leagueId      String
+  department    String // Sector (e.g. "Programadores", "Soporte Técnico")
+  internalGroup String? // Grupo Interno (e.g. "Amigos de Gym")
+  role          LeagueRole @default(MEMBER)
+  
+  // Cache de puntuación por liga
+  points        Int        @default(0) // Puntos totales
+  pointsPhase1  Int        @default(0) // Fase de grupos
+  pointsPhase2  Int        @default(0) // 16vos y 8vos
+  pointsPhase3  Int        @default(0) // 4tos, semis, 3er puesto, final
+
+  // Habilitación de fases por usuario
+  activePhase1  Boolean    @default(true)
+  activePhase2  Boolean    @default(true)
+  activePhase3  Boolean    @default(true)
+  
+  // Estado de pago
+  hasPaid       Boolean    @default(false)
+  
+  // Cache de estadísticas de aciertos
+  exactCount       Int @default(0)
+  differenceCount  Int @default(0)
+  tendencyCount    Int @default(0)
+  consolationCount Int @default(0)
+  bonusCount       Int @default(0)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, leagueId])
+}
+
+model Team {
+  id                   String                      @id @default(uuid())
+  name                 String
+  code                 String                      @unique // Código FIFA (e.g., "ARG", "BRA")
+  flagUrl              String?
+  group                String // Grupo en el Mundial (e.g. "A", "B")
+  homeMatches          Match[]                     @relation("HomeTeam")
+  awayMatches          Match[]                     @relation("AwayTeam")
+  championPredictions  TournamentBonusPrediction[] @relation("ChampionTeam")
+  runnerUpPredictions  TournamentBonusPrediction[] @relation("RunnerUpTeam")
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+}
+
+model Stadium {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  city      String
+  country   String
+  matches   Match[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Match {
+  id                  String      @id @default(uuid())
+  homeTeamId          String?
+  awayTeamId          String?
+  homeTeamPlaceholder String? // Placeholder (e.g. "1° Grupo A")
+  awayTeamPlaceholder String? // Placeholder (e.g. "2° Grupo B")
+  
+  homeScore           Int? // Goles en tiempo regular + adición (90')
+  awayScore           Int? // Goles en tiempo regular + adición (90')
+  
+  homeScoreExtra      Int? // Goles en tiempo suplementario (prórroga)
+  awayScoreExtra      Int? // Goles en tiempo suplementario (prórroga)
+  
+  homeScorePenalties  Int? // Goles en tanda de penales
+  awayScorePenalties  Int? // Goles en tanda de penales
+  
+  winnerId            String? // ID del equipo clasificado / ganador final del partido
+  
+  date                DateTime
+  stage               MatchStage
+  group               String? // Grupo (solo para fase de grupos, e.g. "A")
+  status              MatchStatus @default(SCHEDULED)
+  
+  stadiumId           String
+  stadium             Stadium     @relation(fields: [stadiumId], references: [id])
+  homeTeam            Team?       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam            Team?       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  
+  predictions         Prediction[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+model Prediction {
+  id                 String   @id @default(uuid())
+  userId             String
+  matchId            String
+  
+  homeScore          Int // Pronóstico de goles del local (90')
+  awayScore          Int // Pronóstico de goles del visitante (90')
+  
+  predictedWinnerId  String? // Pronóstico de clasificado (para fase eliminatoria, si empatan en 90')
+  
+  points             Int? // Puntos obtenidos
+  detail             String? // Explicación del puntaje detallada en formato texto
+  
+  // Flags para desglose rápido de aciertos
+  exactMatch         Boolean?
+  goalDifferenceMatch Boolean?
+  tendencyMatch      Boolean?
+  consolationMatch   Boolean?
+  bonusMatch         Boolean? // Si acertó el clasificado en playoffs (+3 pts)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, matchId])
+}
+
+model TournamentBonusPrediction {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  championId       String?
+  runnerUpId       String?
+  topScorerName    String?
+  
+  championPoints   Int?
+  runnerUpPoints   Int?
+  topScorerPoints  Int?
+  
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  champion         Team?    @relation("ChampionTeam", fields: [championId], references: [id])
+  runnerUp         Team?    @relation("RunnerUpTeam", fields: [runnerUpId], references: [id])
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ScoringRule {
+  id          String   @id @default(uuid())
+  ruleName    String   @unique // EXACT, DIFFERENCE, TENDENCY, CONSOLATION, PLAYOFF_QUALIFIED_BONUS, CHAMPION, RUNNER_UP, TOP_SCORER
+  points      Int
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String // e.g. "UPDATE_MATCH", "UPDATE_SCORING_RULES", "USER_BAN"
+  details   String // JSON o descripción
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

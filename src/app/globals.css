@@ -1,26 +1,238 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta Light Mode Premium */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  
+  --primary: #22c55e;
+  --primary-hover: #16a34a;
+  --primary-foreground: #ffffff;
+  
+  --accent-gold: #fbbf24;
+  --accent-gold-hover: #f59e0b;
+  
+  --glow-green: rgba(34, 197, 94, 0.15);
+
+  /* Redefinición de Slates para contraste y legibilidad en Light Mode */
+  --color-slate-400: #475569; /* slate-600 */
+  --color-slate-300: #334155; /* slate-700 */
+  --color-slate-200: #1e293b; /* slate-800 */
+  --color-slate-100: #0f172a; /* slate-900 */
+  --color-slate-500: #1e293b; /* slate-800 */
+  
+  --color-slate-900: #f1f5f9; /* fondo slate-100 */
+  --color-slate-950: #cbd5e1; /* fondo slate-300 */
+  --color-slate-800: #e2e8f0; /* fondo slate-200 */
 }
 
-@theme inline {
+.dark {
+  /* Paleta Dark Mode Premium - "Futbolero Gamer" */
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  --card: #131a2c;
+  --card-foreground: #f8fafc;
+  --border: #1e293b;
+  
+  --primary: #22c55e;
+  --primary-hover: #15803d;
+  --primary-foreground: #0f172a;
+  
+  --accent-gold: #f59e0b;
+  --accent-gold-hover: #d97706;
+  
+  --glow-green: rgba(34, 197, 94, 0.25);
+
+  /* Restauración de Slates estándar en Dark Mode */
+  --color-slate-400: #94a3b8;
+  --color-slate-300: #cbd5e1;
+  --color-slate-200: #e2e8f0;
+  --color-slate-100: #f1f5f9;
+  --color-slate-500: #64748b;
+  
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+  --color-slate-800: #1e293b;
+}
+
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-gold: var(--accent-gold);
+  --color-gold-hover: var(--accent-gold-hover);
+  
+  --font-sans: var(--font-outfit), sans-serif;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 4s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Clases utilitarias personalizadas para efectos premium (Glassmorphism) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-panel {
+  background: rgba(19, 26, 44, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #22c55e 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-card {
+  box-shadow: 0 0 25px var(--glow-green);
+}
+
+/* Transiciones de hover globales */
+.hover-scale {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-scale:hover {
+  transform: translateY(-2px);
+}
+
+/* Ajustes de sombras para el modo claro */
+html:not(.dark) .glass-panel {
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+}
+
+/* Formularios, Inputs y Selects en Modo Claro */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+/* --- BOTONES PREMIUM DEGRADADOS (ESTILO FIFA WORLD CUP) --- */
+
+/* Botón verde premium con degradado y glow */
+.btn-premium {
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%) !important; /* Verde premium */
+  color: #ffffff !important;
+  border-radius: 9999px !important; /* rounded-full */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease-in-out !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-premium:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #166534 100%) !important;
+  box-shadow: 0 6px 20px 0 rgba(34, 197, 94, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-premium:active:not(:disabled) {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Botón premium secundario (neutral para estados inactivos) */
+.btn-premium-secondary {
+  background: rgba(30, 41, 59, 0.5) !important;
+  color: #94a3b8 !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  transition: all 0.2s ease-in-out !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-premium-secondary:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.8) !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+}
+
+/* Para modo claro */
+html:not(.dark) .btn-premium-secondary {
+  background: rgba(226, 232, 240, 0.6) !important;
+  color: #475569 !important;
+  border-color: rgba(71, 85, 105, 0.1) !important;
+}
+
+html:not(.dark) .btn-premium-secondary:hover:not(:disabled) {
+  background: rgba(226, 232, 240, 0.9) !important;
+  color: #0f172a !important;
+}
+
+/* Botón dorado/amarillo premium con degradado y glow */
+.btn-premium-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important; /* Dorado/Amarillo premium */
+  color: #0f172a !important; /* Texto oscuro para legibilidad */
+  border-radius: 9999px !important; /* rounded-full */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  box-shadow: 0 4px 14px 0 rgba(251, 191, 36, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease-in-out !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-premium-gold:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%) !important;
+  box-shadow: 0 6px 20px 0 rgba(251, 191, 36, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-premium-gold:active:not(:disabled) {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 8px 0 rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Item de navegación activo con degradado verde premium */
+.btn-premium-nav {
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px 0 rgba(34, 197, 94, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
