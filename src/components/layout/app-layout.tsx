@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { setActiveLeague, joinNewLeague } from "@/app/actions/league";
 import { updateUserImage, changeUserPassword } from "@/app/actions/user";
+import { CustomDialog } from "@/components/ui/custom-dialog";
 
 interface LeagueItem {
   leagueId: string;
@@ -54,6 +55,33 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  // Estado para diálogos/modales custom
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "warning" | "error" | "confirm";
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
+  const triggerAlert = (
+    title: string,
+    message: string,
+    type: "info" | "success" | "warning" | "error" = "info"
+  ) => {
+    setDialogConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+    });
+  };
 
   // Estados y refs para la foto de perfil
   const [userImage, setUserImage] = useState<string | null>(null);
@@ -113,7 +141,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
             setUserImage(dataUrl);
             await update();
           } else {
-            alert(res.error);
+            triggerAlert("Error al actualizar foto", res.error || "Ocurrió un error al subir la imagen", "error");
           }
         });
       };
@@ -130,7 +158,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
     if (res.success) {
       window.location.reload();
     } else {
-      alert(res.error);
+      triggerAlert("Error al cambiar liga", res.error || "Ocurrió un error al cambiar de liga", "error");
     }
   };
 
@@ -714,6 +742,15 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
           </div>
         </div>
       )}
+
+      {/* Custom dialog alert/confirm dialog */}
+      <CustomDialog
+        isOpen={dialogConfig.isOpen}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        type={dialogConfig.type}
+      />
     </div>
   );
 }

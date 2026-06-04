@@ -4,6 +4,7 @@ import React, { useState, useEffect, useTransition } from "react";
 import { MatchStage, MatchStatus, Team, League, Role, AuditLog } from "@prisma/client";
 import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword } from "@/app/actions/admin";
 import { getSectorsForLeague } from "@/lib/sectors";
+import { CustomDialog } from "@/components/ui/custom-dialog";
 import {
   Trophy,
   CalendarDays,
@@ -77,11 +78,13 @@ function LeagueTransferInfoCell({
   initialAlias,
   initialAmount,
   isDemo,
+  onError,
 }: {
   leagueId: string;
   initialAlias: string;
   initialAmount: number | null;
   isDemo: boolean;
+  onError?: (err: string) => void;
 }) {
   const [alias, setAlias] = useState(initialAlias);
   const [amount, setAmount] = useState(initialAmount !== null ? initialAmount.toString() : "");
@@ -109,7 +112,8 @@ function LeagueTransferInfoCell({
         setSuccess(true);
         setTimeout(() => setSuccess(false), 2000);
       } else {
-        alert(res.error);
+        if (onError) onError(res.error || "Ocurrió un error al guardar");
+        else alert(res.error || "Ocurrió un error al guardar");
       }
     });
   };
@@ -167,6 +171,55 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
   const [updatingPaymentMap, setUpdatingPaymentMap] = useState<Record<string, boolean>>({});
   const [updatingBulk, setUpdatingBulk] = useState(false);
 
+  // Estado para diálogos/modales custom
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "warning" | "error" | "confirm";
+    onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
+  const triggerAlert = (
+    title: string,
+    message: string,
+    type: "info" | "success" | "warning" | "error" = "info",
+    confirmText?: string
+  ) => {
+    setDialogConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      confirmText,
+    });
+  };
+
+  const triggerConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmText?: string,
+    cancelText?: string
+  ) => {
+    setDialogConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm,
+      confirmText,
+      cancelText,
+    });
+  };
+
   useEffect(() => {
     setLocalLeagues(leagues);
   }, [leagues]);
@@ -193,7 +246,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       const res = await updateUserPaymentStatus(userId, usersLeagueId, !currentStatus);
       setUpdatingPaymentMap((prev) => ({ ...prev, [userId]: false }));
       if (!res.success) {
-        alert(res.error);
+        triggerAlert("Error de Pago", res.error || "Ocurrió un error al procesar el pago", "error");
       }
     });
   };
@@ -227,7 +280,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       const res = await updateUsersPhaseStatus([userId], usersLeagueId, phase, !currentStatus);
       setUpdatingPhaseMap((prev) => ({ ...prev, [targetKey]: false }));
       if (!res.success) {
-        alert(res.error);
+        triggerAlert("Error de Fase", res.error || "Ocurrió un error al cambiar la fase", "error");
       }
     });
   };
@@ -235,7 +288,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
   const handleBulkPhaseUpdate = (phase: 1 | 2 | 3, active: boolean) => {
     const userIds = Object.keys(selectedUserIds).filter((id) => selectedUserIds[id]);
     if (userIds.length === 0 || usersLeagueId === "ALL") {
-      alert("Por favor, selecciona al menos un usuario.");
+      triggerAlert("Atención", "Por favor, selecciona al menos un usuario.", "warning");
       return;
     }
 
@@ -255,7 +308,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
           }
         });
         setSelectedUserIds({});
-        alert(`Fase ${phase} ${active ? "habilitada" : "deshabilitada"} para ${userIds.length} usuarios (Demo).`);
+        triggerAlert("Fase Actualizada (Demo)", `Fase ${phase} ${active ? "habilitada" : "deshabilitada"} para ${userIds.length} usuarios (Demo).`, "success");
         return;
       }
 
@@ -264,7 +317,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       if (res.success) {
         setSelectedUserIds({});
       } else {
-        alert(res.error);
+        triggerAlert("Error de Fase", res.error || "Ocurrió un error al actualizar la fase", "error");
       }
     });
   };
@@ -334,45 +387,45 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
   const handleDeleteSector = (sectorName: string) => {
     if (!selectedLeagueId) return;
 
-    if (
-      !confirm(
-        `¿Estás seguro de que querés eliminar el sector "${sectorName}" de esta liga? Todos los usuarios en este sector serán reseteados a 'PENDIENTE' para elegir sector de nuevo.`
-      )
-    ) {
-      return;
-    }
+    triggerConfirm(
+      "¿Eliminar Sector?",
+      `¿Estás seguro de que querés eliminar el sector "${sectorName}" de esta liga?\nTodos los usuarios en este sector serán reseteados a 'PENDIENTE' para elegir sector de nuevo.`,
+      () => {
+        setLoadingSector(true);
+        setSectorSuccess(null);
+        setSectorError(null);
 
-    setLoadingSector(true);
-    setSectorSuccess(null);
-    setSectorError(null);
+        startTransition(async () => {
+          if (isDemo) {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            setLoadingSector(false);
+            const league = localLeagues.find((l) => l.id === selectedLeagueId);
+            if (league) {
+              const current = league.departments ? JSON.parse(league.departments) : getSectorsForLeague(league.inviteCode);
+              const updated = current.filter((s: string) => s !== sectorName);
+              league.departments = JSON.stringify(updated);
+              setLocalLeagues([...localLeagues]);
+              setSectorSuccess(`Sector '${sectorName}' eliminado en modo demostración.`);
+            }
+            return;
+          }
 
-    startTransition(async () => {
-      if (isDemo) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        setLoadingSector(false);
-        const league = localLeagues.find((l) => l.id === selectedLeagueId);
-        if (league) {
-          const current = league.departments ? JSON.parse(league.departments) : getSectorsForLeague(league.inviteCode);
-          const updated = current.filter((s: string) => s !== sectorName);
-          league.departments = JSON.stringify(updated);
-          setLocalLeagues([...localLeagues]);
-          setSectorSuccess(`Sector '${sectorName}' eliminado en modo demostración.`);
-        }
-        return;
-      }
-
-      const res = await deleteLeagueSector(selectedLeagueId, sectorName);
-      setLoadingSector(false);
-      if (res.success && res.sectors) {
-        const updatedLeagues = localLeagues.map((l) =>
-          l.id === selectedLeagueId ? { ...l, departments: JSON.stringify(res.sectors) } : l
-        );
-        setLocalLeagues(updatedLeagues);
-        setSectorSuccess(`Sector '${sectorName}' eliminado con éxito.`);
-      } else {
-        setSectorError(res.error);
-      }
-    });
+          const res = await deleteLeagueSector(selectedLeagueId, sectorName);
+          setLoadingSector(false);
+          if (res.success && res.sectors) {
+            const updatedLeagues = localLeagues.map((l) =>
+              l.id === selectedLeagueId ? { ...l, departments: JSON.stringify(res.sectors) } : l
+            );
+            setLocalLeagues(updatedLeagues);
+            setSectorSuccess(`Sector '${sectorName}' eliminado con éxito.`);
+          } else {
+            setSectorError(res.error);
+          }
+        });
+      },
+      "Eliminar",
+      "Cancelar"
+    );
   };
 
   // --- FILTROS DE PARTIDOS ---
@@ -668,33 +721,37 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       if (res.success) {
         setUserRoleSuccessMap((prev) => ({ ...prev, [targetUserId]: true }));
       } else {
-        alert(res.error);
+        triggerAlert("Error de Rol", res.error || "Ocurrió un error al actualizar el rol", "error");
       }
     });
   };
 
   // --- HANDLER ELIMINACIÓN DE USUARIO ---
   const handleDeleteUser = (targetUserId: string, name: string) => {
-    if (!confirm(`¿Estás seguro de que querés eliminar permanentemente al usuario "${name}"? Esta acción borrará todas sus predicciones y no se puede deshacer.`)) {
-      return;
-    }
+    triggerConfirm(
+      "¿Eliminar Usuario?",
+      `¿Estás seguro de que querés eliminar permanentemente al usuario "${name}"?\nEsta acción borrará todas sus predicciones y no se puede deshacer.`,
+      () => {
+        setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: true }));
 
-    setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: true }));
+        startTransition(async () => {
+          if (isDemo) {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: false }));
+            triggerAlert("Usuario Eliminado (Demo)", "Usuario eliminado con éxito (Simulación en modo Demo).", "success");
+            return;
+          }
 
-    startTransition(async () => {
-      if (isDemo) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: false }));
-        alert("Usuario eliminado con éxito (Simulación en modo Demo).");
-        return;
-      }
-
-      const res = await deleteUser(targetUserId);
-      setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: false }));
-      if (!res.success) {
-        alert(res.error);
-      }
-    });
+          const res = await deleteUser(targetUserId);
+          setDeletingUserMap((prev) => ({ ...prev, [targetUserId]: false }));
+          if (!res.success) {
+            triggerAlert("Error al Eliminar", res.error || "Ocurrió un error al eliminar el usuario", "error");
+          }
+        });
+      },
+      "Eliminar",
+      "Cancelar"
+    );
   };
 
   // --- DESCARGAS EXPORTES ---
@@ -1133,6 +1190,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                           initialAlias={l.transferAlias || ""}
                           initialAmount={l.transferAmount}
                           isDemo={isDemo}
+                          onError={(err) => triggerAlert("Error al Guardar", err, "error")}
                         />
                       </td>
                     </tr>
@@ -1670,6 +1728,18 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
           </div>
         </div>
       )}
+
+      {/* Custom dialog alert/confirm dialog */}
+      <CustomDialog
+        isOpen={dialogConfig.isOpen}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={dialogConfig.onConfirm}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        type={dialogConfig.type}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+      />
     </div>
   );
 }
