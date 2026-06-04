@@ -46,6 +46,24 @@ export const authConfig = {
 
       return true;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user as any).role;
+        token.name = user.name;
+        token.picture = user.image;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as "ADMIN" | "USER";
+        session.user.name = token.name as string;
+        session.user.image = token.picture as string;
+      }
+      return session;
+    },
   },
   providers: [], // Configurado en auth.ts
 } satisfies NextAuthConfig;
