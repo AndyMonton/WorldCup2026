@@ -263,7 +263,10 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   };
 
   const isAdmin = session?.user?.role === "ADMIN";
-  const isCollaborator = activeLeague?.role === "COLLABORATOR";
+  const isCollaborator =
+    activeLeague?.role === "COLLABORATOR" ||
+    activeLeague?.role === "ADMIN" ||
+    activeLeague?.role === "OWNER";
 
   const navigation = [
     { name: "Inicio", href: "/dashboard", icon: LayoutDashboard },

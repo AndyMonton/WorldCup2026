@@ -522,7 +522,7 @@ export async function updateUsersPhaseStatus(
     // Permitir si es ADMIN global
     let isAllowed = session.user?.role === "ADMIN";
 
-    // Si no es ADMIN global, verificar si es COLLABORATOR de la liga
+    // Si no es ADMIN global, verificar si es COLLABORATOR, ADMIN o OWNER de la liga
     if (!isAllowed) {
       const callerMembership = await prisma.leagueMembership.findUnique({
         where: {
@@ -532,7 +532,12 @@ export async function updateUsersPhaseStatus(
           },
         },
       });
-      if (callerMembership && callerMembership.role === "COLLABORATOR") {
+      if (
+        callerMembership &&
+        (callerMembership.role === "COLLABORATOR" ||
+          callerMembership.role === "ADMIN" ||
+          callerMembership.role === "OWNER")
+      ) {
         isAllowed = true;
       }
     }
@@ -651,7 +656,7 @@ export async function updateUserPaymentStatus(
     // Permitir si es ADMIN global
     let isAllowed = session.user?.role === "ADMIN";
 
-    // Si no es ADMIN global, verificar si es COLLABORATOR de la liga
+    // Si no es ADMIN global, verificar si es COLLABORATOR, ADMIN o OWNER de la liga
     if (!isAllowed) {
       const callerMembership = await prisma.leagueMembership.findUnique({
         where: {
@@ -661,7 +666,12 @@ export async function updateUserPaymentStatus(
           },
         },
       });
-      if (callerMembership && callerMembership.role === "COLLABORATOR") {
+      if (
+        callerMembership &&
+        (callerMembership.role === "COLLABORATOR" ||
+          callerMembership.role === "ADMIN" ||
+          callerMembership.role === "OWNER")
+      ) {
         isAllowed = true;
       }
     }

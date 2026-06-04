@@ -14,13 +14,21 @@ export default async function CollaboratorPage() {
 
   // Obtener liga activa desde cookies
   const cookieStore = await cookies();
-  const activeLeagueId = cookieStore.get("active_league_id")?.value;
+  let activeLeagueId = cookieStore.get("active_league_id")?.value;
+
+  if (!activeLeagueId) {
+    // Buscar la primera membresía del usuario como fallback
+    const fallbackMembership = await prisma.leagueMembership.findFirst({
+      where: { userId },
+    });
+    activeLeagueId = fallbackMembership?.leagueId;
+  }
 
   if (!activeLeagueId) {
     redirect("/dashboard");
   }
 
-  // Verificar si es administrador global o si es colaborador de la liga activa
+  // Verificar si es administrador global o si es colaborador/admin/owner de la liga activa
   const isGlobalAdmin = session.user.role === "ADMIN";
 
   const membership = await prisma.leagueMembership.findUnique({
@@ -35,10 +43,13 @@ export default async function CollaboratorPage() {
     },
   });
 
-  const isCollaborator = membership?.role === "COLLABORATOR";
+  const isCollaborator =
+    membership?.role === "COLLABORATOR" ||
+    membership?.role === "ADMIN" ||
+    membership?.role === "OWNER";
 
   if (!isGlobalAdmin && !isCollaborator) {
-    // Si no es admin global ni es colaborador de esta liga, no tiene permisos
+    // Si no es admin global ni tiene rol de gestión de esta liga, no tiene permisos
     redirect("/dashboard");
   }
 
