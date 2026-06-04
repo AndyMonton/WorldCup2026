@@ -116,9 +116,9 @@ model LeagueMembership {
   pointsPhase3  Int        @default(0) // 4tos, semis, 3er puesto, final
 
   // Habilitación de fases por usuario
-  activePhase1  Boolean    @default(true)
-  activePhase2  Boolean    @default(true)
-  activePhase3  Boolean    @default(true)
+  activePhase1  Boolean    @default(false)
+  activePhase2  Boolean    @default(false)
+  activePhase3  Boolean    @default(false)
   
   // Estado de pago
   hasPaid       Boolean    @default(false)

@@ -323,24 +323,6 @@ export function RankingView({
               </div>
               <Award className="w-10 h-10 text-slate-400" />
               <h4 className="font-bold text-sm truncate max-w-full text-foreground">{podium[1].name}</h4>
-              <div className="flex items-center gap-1.5">
-                {(() => {
-                  const isHabilitado = currentTournamentPhase === 1 
-                    ? podium[1].activePhase1 
-                    : currentTournamentPhase === 2 
-                    ? podium[1].activePhase2 
-                    : podium[1].activePhase3;
-                  return isHabilitado ? (
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
-                      Habilitado
-                    </span>
-                  ) : (
-                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
-                      No Habilitado
-                    </span>
-                  );
-                })()}
-              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">{podium[1].department}</p>
               <div className="text-lg font-extrabold text-foreground">
                 {podium[1].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -358,24 +340,6 @@ export function RankingView({
               <h4 className="font-extrabold text-base truncate max-w-full">
                 <span className="text-gradient inline-block">{podium[0].name}</span>
               </h4>
-              <div className="flex items-center gap-1.5">
-                {(() => {
-                  const isHabilitado = currentTournamentPhase === 1 
-                    ? podium[0].activePhase1 
-                    : currentTournamentPhase === 2 
-                    ? podium[0].activePhase2 
-                    : podium[0].activePhase3;
-                  return isHabilitado ? (
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
-                      Habilitado
-                    </span>
-                  ) : (
-                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
-                      No Habilitado
-                    </span>
-                  );
-                })()}
-              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{podium[0].department}</p>
               <div className="text-2xl font-extrabold text-gold">
                 {podium[0].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -391,24 +355,6 @@ export function RankingView({
               </div>
               <Award className="w-9 h-9 text-amber-700" />
               <h4 className="font-bold text-sm truncate max-w-full text-foreground">{podium[2].name}</h4>
-              <div className="flex items-center gap-1.5">
-                {(() => {
-                  const isHabilitado = currentTournamentPhase === 1 
-                    ? podium[2].activePhase1 
-                    : currentTournamentPhase === 2 
-                    ? podium[2].activePhase2 
-                    : podium[2].activePhase3;
-                  return isHabilitado ? (
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
-                      Habilitado
-                    </span>
-                  ) : (
-                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
-                      No Habilitado
-                    </span>
-                  );
-                })()}
-              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">{podium[2].department}</p>
               <div className="text-lg font-extrabold text-foreground">
                 {podium[2].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -482,29 +428,11 @@ export function RankingView({
                         )}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="truncate max-w-[120px] sm:max-w-none">{member.name}</span>
-                          <div className="flex gap-1 items-center shrink-0">
-                            {isCurrentUser && (
-                              <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase">
-                                Vos
-                              </span>
-                            )}
-                            {(() => {
-                              const isHabilitado = currentTournamentPhase === 1 
-                                ? member.activePhase1 
-                                : currentTournamentPhase === 2 
-                                ? member.activePhase2 
-                                : member.activePhase3;
-                              return isHabilitado ? (
-                                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
-                                  Habilitado
-                                </span>
-                              ) : (
-                                <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
-                                  No Habilitado
-                                </span>
-                              );
-                            })()}
-                          </div>
+                          {isCurrentUser && (
+                            <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase shrink-0">
+                              Vos
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>

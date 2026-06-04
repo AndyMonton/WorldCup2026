@@ -66,24 +66,6 @@ export async function savePrediction(
       });
     }
 
-    if (membership) {
-      let isPhaseActive = true;
-      if (match.stage === "GROUPS") {
-        isPhaseActive = membership.activePhase1;
-      } else if (match.stage === "ROUND_32" || match.stage === "ROUND_16") {
-        isPhaseActive = membership.activePhase2;
-      } else {
-        isPhaseActive = membership.activePhase3;
-      }
-
-      if (!isPhaseActive) {
-        return {
-          success: false,
-          error: "No estás habilitado para pronosticar partidos de esta fase en tu liga.",
-        };
-      }
-    }
-
     // Validar que en fases eliminatorias, si hay empate en goles, se seleccione clasificado
     const isPlayoff = match.stage !== "GROUPS";
     if (isPlayoff && homeScore === awayScore && !predictedWinnerId) {
@@ -141,8 +123,8 @@ export async function saveBonusPredictions(
       return { success: false, error: "Usuario no autenticado." };
     }
 
-    // Bloqueo antes del inicio del primer partido (11 de Junio, 2026 12:00 UTC)
-    const firstMatchStart = new Date("2026-06-11T12:00:00Z");
+    // Bloqueo antes del inicio del primer partido (11 de Junio, 2026 19:00 UTC)
+    const firstMatchStart = new Date("2026-06-11T19:00:00Z");
     if (new Date() > firstMatchStart) {
       return {
         success: false,

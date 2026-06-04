@@ -15,6 +15,10 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("Iniciando la siembra de la base de datos (Seed)...");
 
+  console.log("Limpiando predicciones y partidos existentes...");
+  await prisma.prediction.deleteMany();
+  await prisma.match.deleteMany();
+
   // 1. Reglas de Puntuación (ScoringRules)
   console.log("Sembrando reglas de puntuación...");
   const scoringRules = [
@@ -168,63 +172,163 @@ async function main() {
   // Fecha base de inicio del Mundial: 11 de Junio, 2026
   const tournamentStartDate = new Date("2026-06-11T12:00:00Z");
 
-  const groupOffsets: Record<string, number> = {
-    A: 0, B: 0, C: 1, D: 1, E: 2, F: 2, G: 3, H: 3, I: 4, J: 5, K: 6, L: 7
-  };
+  // Helper para asignar fecha y hora exactas en hora de Argentina (GMT-3)
+  function getGroupMatchDateTime(group: string, matchIndex: number): { dayDelta: number; hour: number } {
+    // dayDelta es relativo a "2026-06-11" (Día 0)
+    // hour es la hora en Argentina (GMT-3)
+    
+    // Ronda 1: matchIndex 0 y 1
+    if (matchIndex === 0) {
+      switch (group) {
+        case "A": return { dayDelta: 0, hour: 16 }; // MEX vs RSA: Jun 11, 16:00
+        case "B": return { dayDelta: 1, hour: 16 }; // CAN vs BIH: Jun 12, 16:00
+        case "C": return { dayDelta: 2, hour: 19 }; // BRA vs MAR: Jun 13, 19:00
+        case "D": return { dayDelta: 1, hour: 20 }; // USA vs PAR: Jun 12, 20:00
+        case "E": return { dayDelta: 3, hour: 14 }; // GER vs CUW: Jun 14, 14:00
+        case "F": return { dayDelta: 3, hour: 17 }; // NED vs JPN: Jun 14, 17:00
+        case "G": return { dayDelta: 4, hour: 16 }; // BEL vs EGY: Jun 15, 16:00
+        case "H": return { dayDelta: 4, hour: 13 }; // ESP vs CPV: Jun 15, 13:00
+        case "I": return { dayDelta: 5, hour: 13 }; // FRA vs SEN: Jun 16, 13:00
+        case "J": return { dayDelta: 5, hour: 19 }; // AUT vs JOR: Jun 16, 19:00
+        case "K": return { dayDelta: 6, hour: 14 }; // POR vs COD: Jun 17, 14:00
+        case "L": return { dayDelta: 6, hour: 17 }; // ENG vs CRO: Jun 17, 17:00
+      }
+    }
+    if (matchIndex === 1) {
+      switch (group) {
+        case "A": return { dayDelta: 0, hour: 23 }; // KOR vs CZE: Jun 11, 23:00
+        case "B": return { dayDelta: 2, hour: 16 }; // QAT vs SUI: Jun 13, 16:00
+        case "C": return { dayDelta: 2, hour: 22 }; // HAI vs SCO: Jun 13, 22:00
+        case "D": return { dayDelta: 1, hour: 23 }; // AUS vs TUR: Jun 12, 23:00
+        case "E": return { dayDelta: 3, hour: 20 }; // CIV vs ECU: Jun 14, 20:00
+        case "F": return { dayDelta: 3, hour: 23 }; // SWE vs TUN: Jun 14, 23:00
+        case "G": return { dayDelta: 4, hour: 22 }; // IRN vs NZL: Jun 15, 22:00
+        case "H": return { dayDelta: 4, hour: 19 }; // KSA vs URU: Jun 15, 19:00
+        case "I": return { dayDelta: 5, hour: 16 }; // IRQ vs NOR: Jun 16, 16:00
+        case "J": return { dayDelta: 5, hour: 22 }; // ARG vs ALG: Jun 16, 22:00
+        case "K": return { dayDelta: 6, hour: 23 }; // UZB vs COL: Jun 17, 23:00
+        case "L": return { dayDelta: 6, hour: 20 }; // GHA vs PAN: Jun 17, 20:00
+      }
+    }
+
+    // Ronda 2: matchIndex 2 y 3
+    if (matchIndex === 2) {
+      switch (group) {
+        case "A": return { dayDelta: 6, hour: 13 };
+        case "B": return { dayDelta: 7, hour: 13 };
+        case "C": return { dayDelta: 8, hour: 13 };
+        case "D": return { dayDelta: 7, hour: 19 };
+        case "E": return { dayDelta: 9, hour: 13 };
+        case "F": return { dayDelta: 9, hour: 19 };
+        case "G": return { dayDelta: 10, hour: 13 };
+        case "H": return { dayDelta: 10, hour: 19 };
+        case "I": return { dayDelta: 11, hour: 13 };
+        case "J": return { dayDelta: 11, hour: 19 };
+        case "K": return { dayDelta: 8, hour: 19 };
+        case "L": return { dayDelta: 6, hour: 19 };
+      }
+    }
+    if (matchIndex === 3) {
+      switch (group) {
+        case "A": return { dayDelta: 6, hour: 16 };
+        case "B": return { dayDelta: 7, hour: 16 };
+        case "C": return { dayDelta: 8, hour: 16 };
+        case "D": return { dayDelta: 7, hour: 22 };
+        case "E": return { dayDelta: 9, hour: 16 };
+        case "F": return { dayDelta: 9, hour: 22 };
+        case "G": return { dayDelta: 10, hour: 16 };
+        case "H": return { dayDelta: 10, hour: 22 };
+        case "I": return { dayDelta: 11, hour: 16 };
+        case "J": return { dayDelta: 11, hour: 22 };
+        case "K": return { dayDelta: 8, hour: 22 };
+        case "L": return { dayDelta: 6, hour: 22 };
+      }
+    }
+
+    // Ronda 3: matchIndex 4 y 5
+    if (matchIndex === 4) {
+      switch (group) {
+        case "A": return { dayDelta: 12, hour: 13 };
+        case "B": return { dayDelta: 13, hour: 13 };
+        case "C": return { dayDelta: 14, hour: 13 };
+        case "D": return { dayDelta: 13, hour: 19 };
+        case "E": return { dayDelta: 15, hour: 13 };
+        case "F": return { dayDelta: 15, hour: 19 };
+        case "G": return { dayDelta: 16, hour: 13 };
+        case "H": return { dayDelta: 16, hour: 19 };
+        case "I": return { dayDelta: 14, hour: 19 };
+        case "J": return { dayDelta: 12, hour: 19 };
+        case "K": return { dayDelta: 14, hour: 22 };
+        case "L": return { dayDelta: 12, hour: 22 };
+      }
+    }
+    // matchIndex === 5
+    switch (group) {
+      case "A": return { dayDelta: 12, hour: 16 };
+      case "B": return { dayDelta: 13, hour: 16 };
+      case "C": return { dayDelta: 14, hour: 16 };
+      case "D": return { dayDelta: 13, hour: 22 };
+      case "E": return { dayDelta: 15, hour: 16 };
+      case "F": return { dayDelta: 15, hour: 22 };
+      case "G": return { dayDelta: 16, hour: 16 };
+      case "H": return { dayDelta: 16, hour: 22 };
+      case "I": return { dayDelta: 14, hour: 22 };
+      case "J": return { dayDelta: 12, hour: 22 };
+      case "K": return { dayDelta: 14, hour: 23 };
+      case "L": return { dayDelta: 12, hour: 23 };
+    }
+    return { dayDelta: 0, hour: 12 };
+  }
 
   // Para cada grupo, programar partidos round-robin
   for (const [groupLetter, teamIds] of Object.entries(teamsByGroup)) {
-    const offsetDays = groupOffsets[groupLetter];
-
     // Enfrentamientos round robin para 4 equipos (0, 1, 2, 3)
-    const matchesRoundRobin = [
-      // Ronda 1
-      { home: teamIds[0], away: teamIds[1], dayDelta: 0, hour: 13 },
-      { home: teamIds[2], away: teamIds[3], dayDelta: 0, hour: 16 },
-      // Ronda 2
-      { home: teamIds[0], away: teamIds[2], dayDelta: 4, hour: 13 },
-      { home: teamIds[1], away: teamIds[3], dayDelta: 4, hour: 16 },
-      // Ronda 3
-      { home: teamIds[0], away: teamIds[3], dayDelta: 8, hour: 13 },
-      { home: teamIds[1], away: teamIds[2], dayDelta: 8, hour: 16 },
+    const pairings = [
+      { home: teamIds[0], away: teamIds[1] }, // index 0 (Ronda 1)
+      { home: teamIds[2], away: teamIds[3] }, // index 1 (Ronda 1)
+      { home: teamIds[0], away: teamIds[2] }, // index 2 (Ronda 2)
+      { home: teamIds[1], away: teamIds[3] }, // index 3 (Ronda 2)
+      { home: teamIds[0], away: teamIds[3] }, // index 4 (Ronda 3)
+      { home: teamIds[1], away: teamIds[2] }, // index 5 (Ronda 3)
     ];
 
-    for (const m of matchesRoundRobin) {
+    for (let idx = 0; idx < pairings.length; idx++) {
+      const pair = pairings[idx];
+      const sched = getGroupMatchDateTime(groupLetter, idx);
+
       const matchDate = new Date(tournamentStartDate);
-      matchDate.setDate(tournamentStartDate.getDate() + offsetDays + m.dayDelta);
-      matchDate.setHours(m.hour, 0, 0, 0);
+      matchDate.setDate(tournamentStartDate.getDate() + sched.dayDelta);
+      // Se establece la hora en UTC (sumando 3 horas para la diferencia con Argentina UTC-3)
+      matchDate.setUTCHours(sched.hour + 3, 0, 0, 0);
 
       const stadiumName = stadiumNames[stadiumIndex % stadiumNames.length];
-      const stadiumId = stadiumMap[stadiumName];
+      let stadiumId = stadiumMap[stadiumName];
       stadiumIndex++;
 
-      // Usar findFirst o similar para evitar duplicados en re-seed
-      const existingMatch = await prisma.match.findFirst({
-        where: {
-          homeTeamId: m.home,
-          awayTeamId: m.away,
+      // Asignar estadios oficiales específicos para los partidos clave de la inauguración
+      if (groupLetter === "A" && idx === 0) {
+        stadiumId = stadiumMap["Estadio Azteca"] || stadiumId;
+      } else if (groupLetter === "A" && idx === 1) {
+        stadiumId = stadiumMap["Estadio Akron"] || stadiumId;
+      } else if (groupLetter === "B" && idx === 0) {
+        stadiumId = stadiumMap["BMO Field"] || stadiumId;
+      } else if (groupLetter === "D" && idx === 0) {
+        stadiumId = stadiumMap["SoFi Stadium"] || stadiumId;
+      } else if (groupLetter === "D" && idx === 1) {
+        stadiumId = stadiumMap["BC Place"] || stadiumId;
+      }
+
+      await prisma.match.create({
+        data: {
+          homeTeamId: pair.home,
+          awayTeamId: pair.away,
+          date: matchDate,
           stage: MatchStage.GROUPS,
+          group: groupLetter,
+          status: MatchStatus.SCHEDULED,
+          stadiumId,
         },
       });
-
-      if (!existingMatch) {
-        await prisma.match.create({
-          data: {
-            homeTeamId: m.home,
-            awayTeamId: m.away,
-            date: matchDate,
-            stage: MatchStage.GROUPS,
-            group: groupLetter,
-            status: MatchStatus.SCHEDULED,
-            stadiumId,
-          },
-        });
-      } else {
-        await prisma.match.update({
-          where: { id: existingMatch.id },
-          data: { date: matchDate, stadiumId },
-        });
-      }
     }
   }
 
@@ -257,7 +361,7 @@ async function main() {
     const placeholder = r32Placeholders[i];
     const matchDate = new Date(r32StartDate);
     matchDate.setDate(r32StartDate.getDate() + Math.floor(i / 4)); // 4 partidos por día
-    matchDate.setHours(14 + (i % 4) * 3, 0, 0, 0); // Escalonado cada 3 horas
+    matchDate.setUTCHours((14 + (i % 4) * 3) + 3, 0, 0, 0); // Escalonado cada 3 horas (de 14 a 23 en Argentina)
 
     const stadiumName = stadiumNames[stadiumIndex % stadiumNames.length];
     const stadiumId = stadiumMap[stadiumName];
@@ -296,7 +400,7 @@ async function main() {
   for (let i = 0; i < 8; i++) {
     const matchDate = new Date(r16StartDate);
     matchDate.setDate(r16StartDate.getDate() + Math.floor(i / 2)); // 2 partidos por día
-    matchDate.setHours(15 + (i % 2) * 4, 0, 0, 0);
+    matchDate.setUTCHours((15 + (i % 2) * 4) + 3, 0, 0, 0);
 
     const stadiumName = stadiumNames[stadiumIndex % stadiumNames.length];
     const stadiumId = stadiumMap[stadiumName];
@@ -338,7 +442,7 @@ async function main() {
   for (let i = 0; i < 4; i++) {
     const matchDate = new Date(qfStartDate);
     matchDate.setDate(qfStartDate.getDate() + Math.floor(i / 2)); // 2 partidos por día el 7 y 8, o 9
-    matchDate.setHours(15 + (i % 2) * 4, 0, 0, 0);
+    matchDate.setUTCHours((15 + (i % 2) * 4) + 3, 0, 0, 0);
 
     const stadiumName = stadiumNames[stadiumIndex % stadiumNames.length];
     const stadiumId = stadiumMap[stadiumName];
@@ -380,7 +484,7 @@ async function main() {
   for (let i = 0; i < 2; i++) {
     const matchDate = new Date(sfStartDate);
     matchDate.setDate(sfStartDate.getDate() + i);
-    matchDate.setHours(19, 0, 0, 0);
+    matchDate.setUTCHours(19 + 3, 0, 0, 0);
 
     const stadiumName = stadiumNames[stadiumIndex % stadiumNames.length];
     const stadiumId = stadiumMap[stadiumName];
@@ -418,7 +522,7 @@ async function main() {
 
   // Partido por el Tercer Puesto
   // Fecha: 18 de julio
-  const thirdPlaceDate = new Date("2026-07-18T15:00:00Z");
+  const thirdPlaceDate = new Date("2026-07-18T18:00:00Z");
   const tpHomePlaceholder = "Perdedor Semifinal #1";
   const tpAwayPlaceholder = "Perdedor Semifinal #2";
   const tpStadiumId = stadiumMap["Hard Rock Stadium"] || stadiumNames[0]; // Estadios premium para finales
@@ -449,7 +553,7 @@ async function main() {
 
   // Gran Final
   // Fecha: 19 de julio
-  const finalDate = new Date("2026-07-19T15:00:00Z");
+  const finalDate = new Date("2026-07-19T18:00:00Z");
   const finalHomePlaceholder = "Ganador Semifinal #1";
   const finalAwayPlaceholder = "Ganador Semifinal #2";
   const finalStadiumId = stadiumMap["MetLife Stadium"] || stadiumNames[0];
@@ -521,6 +625,10 @@ async function main() {
       leagueId: defaultLeague.id,
       department: "Administración",
       role: "OWNER",
+      activePhase1: true,
+      activePhase2: true,
+      activePhase3: true,
+      hasPaid: true,
     },
   });
   console.log(`Administrador creado: ${defaultAdmin.email}`);
@@ -555,6 +663,10 @@ async function main() {
       leagueId: defaultLeague.id,
       department: "Soporte Técnico",
       role: "MEMBER",
+      activePhase1: true,
+      activePhase2: true,
+      activePhase3: true,
+      hasPaid: true,
     },
   });
   console.log(`Usuario regular creado: ${defaultUser.email}`);

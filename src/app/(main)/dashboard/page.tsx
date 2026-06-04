@@ -5,6 +5,7 @@ import { Trophy, CalendarDays, Award, Timer, Sparkles, Building2, User2, AlertCi
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { JoinLeagueCard } from "@/components/dashboard/join-league-card";
+import { CountdownTimer } from "@/components/dashboard/countdown-timer";
 
 // Datos de demostración en caso de error de base de datos o sin conexión
 const mockDashboardData = {
@@ -345,8 +346,8 @@ export default async function DashboardPage() {
   }
 
   // Verificar si el primer partido ya comenzó para bloquear predicciones del torneo
-  // 11 de Junio, 2026 12:00 UTC (o según el fixture real)
-  const firstMatchStart = new Date("2026-06-11T12:00:00Z");
+  // 11 de Junio, 2026 19:00 UTC (o según el fixture real)
+  const firstMatchStart = new Date("2026-06-11T19:00:00Z");
   const tournamentStarted = new Date() > firstMatchStart;
 
   // Obtener partido destacado (primer partido programado, o un mock si no hay)
@@ -354,7 +355,7 @@ export default async function DashboardPage() {
     id: "featured-mock",
     homeTeam: { name: "Argentina", code: "ARG" },
     awayTeam: { name: "Alemania", code: "GER" },
-    date: new Date("2026-06-11T12:00:00Z"),
+    date: new Date("2026-06-11T19:00:00Z"),
     stadium: { name: "Estadio Azteca" },
   };
 
@@ -362,7 +363,7 @@ export default async function DashboardPage() {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "UTC"
+    timeZone: "America/Argentina/Buenos_Aires"
   }) + " hs";
 
   const getFlagUrl = (code: string | null | undefined) => {
@@ -405,6 +406,11 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Cuenta Regresiva */}
+      {!tournamentStarted && (
+        <CountdownTimer />
+      )}
+
       {/* --- BANNER DE BIENVENIDA (ESTADIO) --- */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-border/40 min-h-[340px] flex items-center p-8 md:p-12 lg:p-16 bg-slate-950">
         {/* Imagen de fondo */}
@@ -412,11 +418,11 @@ export default async function DashboardPage() {
           <img
             src="/images/stadium_banner.png"
             alt="Stadium Banner"
-            className="w-full h-full object-cover object-center opacity-60"
+            className="w-full h-full object-cover object-center opacity-85"
           />
-          {/* Degradado oscuro para integrar el fondo */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/50 to-transparent"></div>
+          {/* Degradado oscuro suavizado para integrar el fondo */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-slate-950/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent"></div>
         </div>
 
         {/* Contenido sobre el banner */}
@@ -550,6 +556,118 @@ export default async function DashboardPage() {
               <Sparkles className="w-3.5 h-3.5" />
               Pronosticar Ahora
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECCIÓN: GRUPOS DEL MUNDIAL --- */}
+      <div className="glass-panel border border-border rounded-3xl p-6 shadow-xl relative overflow-hidden bg-slate-900/10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+            <Building2 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight">
+              Fase de Grupos - Fixture Oficial
+            </h3>
+            <p className="text-xs text-slate-400">
+              Conoce la distribución de los 12 grupos del Mundial 2026.
+            </p>
+          </div>
+        </div>
+        <div className="w-full flex justify-center items-center bg-slate-950/40 rounded-2xl overflow-hidden border border-border/30 p-2 md:p-4">
+          <img
+            src="/images/groups_stage.png"
+            alt="FIFA World Cup 2026 Group Stage"
+            className="w-full max-w-4xl h-auto object-contain rounded-xl hover:scale-[1.01] transition-transform duration-500 shadow-lg"
+          />
+        </div>
+      </div>
+
+      {/* --- SECCIÓN: SEDES Y ESTADIOS --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Mapa de Sedes */}
+        <div className="lg:col-span-1 glass-panel border border-border rounded-3xl p-6 shadow-xl relative overflow-hidden bg-slate-900/10 flex flex-col justify-between">
+          <div>
+            <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mb-2">
+              Sedes del Mundial 2026
+            </h3>
+            <p className="text-xs text-slate-400 mb-4">
+              16 ciudades anfitrionas en Estados Unidos, México y Canadá albergarán el torneo más grande de la historia.
+            </p>
+          </div>
+          <div className="w-full bg-slate-950/60 rounded-2xl overflow-hidden border border-border/20 p-1 flex items-center justify-center">
+            <img
+              src="/images/world_cup_map.png"
+              alt="Mapa de Sedes FIFA 2026"
+              className="w-full h-auto object-cover rounded-xl shadow-lg hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+        </div>
+
+        {/* Galería de Estadios */}
+        <div className="lg:col-span-2 glass-panel border border-border rounded-3xl p-6 shadow-xl relative overflow-hidden bg-slate-900/10">
+          <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mb-2">
+            Estadios Destacados
+          </h3>
+          <p className="text-xs text-slate-400 mb-6">
+            Conoce los templos del fútbol donde se escribirá la historia del Mundial 2026.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Estadio 1: Estadio Azteca */}
+            <div className="glass-panel border border-border rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex flex-col hover:border-slate-800 transition-all">
+              <img
+                src="/images/estadio_azteca.png"
+                alt="Estadio Azteca"
+                className="w-full h-36 object-cover"
+              />
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-extrabold text-sm text-slate-200">Estadio Azteca</h4>
+                  <p className="text-[10px] text-primary font-bold uppercase mt-1">Ciudad de México, México</p>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  El histórico templo del fútbol mundial, el primer estadio en albergar tres Copas del Mundo.
+                </p>
+              </div>
+            </div>
+
+            {/* Estadio 2: MetLife Stadium */}
+            <div className="glass-panel border border-border rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex flex-col hover:border-slate-800 transition-all">
+              <img
+                src="/images/metlife_stadium.png"
+                alt="MetLife Stadium"
+                className="w-full h-36 object-cover"
+              />
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-extrabold text-sm text-slate-200">MetLife Stadium</h4>
+                  <p className="text-[10px] text-primary font-bold uppercase mt-1">N. York / N. Jersey, EE.UU.</p>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  Sede elegida para albergar la gran Final del Mundial el 19 de julio de 2026.
+                </p>
+              </div>
+            </div>
+
+            {/* Estadio 3: SoFi Stadium */}
+            <div className="glass-panel border border-border rounded-2xl overflow-hidden shadow-lg bg-slate-950 flex flex-col hover:border-slate-800 transition-all">
+              <img
+                src="/images/sofi_stadium.png"
+                alt="SoFi Stadium"
+                className="w-full h-36 object-cover"
+              />
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-extrabold text-sm text-slate-200">SoFi Stadium</h4>
+                  <p className="text-[10px] text-primary font-bold uppercase mt-1">Los Ángeles, EE.UU.</p>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  La maravilla tecnológica más moderna del mundo, sede de partidos clave de fase de grupos.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

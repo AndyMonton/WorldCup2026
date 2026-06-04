@@ -158,7 +158,7 @@ export function PredictionsView({
         (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
         activePhase3;
       const blockTime = new Date(m.date.getTime() - 15 * 60 * 1000);
-      const isLocked = new Date() > blockTime || !isPhaseActive;
+      const isLocked = new Date() > blockTime;
       if (isLocked) continue;
 
       const score = scores[m.id];
@@ -228,9 +228,6 @@ export function PredictionsView({
   };
 
   const getMatchBadge = (match: MatchItem, hasPred: boolean, isPhaseActive: boolean = true) => {
-    if (!isPhaseActive) {
-      return { text: "NO HABILITADO", style: "bg-amber-500/10 text-amber-500 border-amber-500/20" };
-    }
     const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
     const isLocked = new Date() > blockTime;
 
@@ -317,7 +314,7 @@ export function PredictionsView({
         (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
         activePhase3;
       const blockTime = new Date(m.date.getTime() - 15 * 60 * 1000);
-      const isLocked = new Date() > blockTime || !isPhaseActive;
+      const isLocked = new Date() > blockTime;
       if (isLocked) return false;
 
       const score = scores[m.id];
@@ -343,7 +340,7 @@ export function PredictionsView({
       runnerUpId !== originalRunnerUp ||
       topScorerName !== originalTopScorer;
 
-    const isBonusLocked = new Date() > new Date("2026-06-11T12:00:00Z");
+    const isBonusLocked = new Date() > new Date("2026-06-11T19:00:00Z");
 
     if (matchesToSave.length === 0 && (!bonusChanged || isBonusLocked)) {
       setGlobalStatus({ type: "info", message: "No hay cambios pendientes o válidos por guardar." });
@@ -629,7 +626,7 @@ export function PredictionsView({
   };
 
   // Fecha del primer partido para verificar bloqueo de especiales
-  const firstMatchStart = new Date("2026-06-11T12:00:00Z");
+  const firstMatchStart = new Date("2026-06-11T19:00:00Z");
   const isBonusLocked = new Date() > firstMatchStart;
 
   // Cálculos dinámicos para el encabezado del grupo activo en mobile
@@ -737,10 +734,10 @@ export function PredictionsView({
         {((activeTab === "groups" && !activePhase1) ||
           (activeTab === "playoffs-1" && !activePhase2) ||
           (activeTab === "playoffs-2" && !activePhase3)) && (
-          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-sm shadow-md animate-pulse">
-            <Lock className="w-5 h-5 flex-shrink-0" />
+          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-sm shadow-md">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400" />
             <div>
-              <span className="font-bold">Fase Deshabilitada:</span> No estás habilitado para participar o modificar pronósticos en esta fase de la liga. Contactá al administrador para que te habilite.
+              <span className="font-bold">Pago Pendiente:</span> Podés cargar tus pronósticos normalmente, pero no figurarás en el Ranking para esta fase de la liga hasta que el administrador confirme tu pago.
             </div>
           </div>
         )}
@@ -819,7 +816,11 @@ export function PredictionsView({
               // Agrupar partidos por fecha para Escritorio
               const grouped: { dateStr: string; matches: typeof filteredMatches }[] = [];
               filteredMatches.forEach((m) => {
-                const dateStr = m.date.toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+                const dateStr = m.date.toLocaleDateString("es-ES", {
+                  day: "numeric",
+                  month: "long",
+                  timeZone: "America/Argentina/Buenos_Aires"
+                });
                 let group = grouped.find((g) => g.dateStr === dateStr);
                 if (!group) {
                   group = { dateStr, matches: [] };
@@ -842,7 +843,7 @@ export function PredictionsView({
                         (match.stage === MatchStage.ROUND_32 || match.stage === MatchStage.ROUND_16) ? activePhase2 :
                         activePhase3;
                       const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
-                      const isLocked = new Date() > blockTime || !isPhaseActive;
+                      const isLocked = new Date() > blockTime;
                       const isLockedTime = new Date() > blockTime;
 
                       const score = scores[match.id];
@@ -858,6 +859,7 @@ export function PredictionsView({
                       const formattedTime = match.date.toLocaleTimeString("es-ES", {
                         hour: "2-digit",
                         minute: "2-digit",
+                        timeZone: "America/Argentina/Buenos_Aires"
                       });
 
                       if (isFinished) {
@@ -867,10 +869,10 @@ export function PredictionsView({
                         return (
                           <div
                             key={match.id}
-                            className={`glass-panel border rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between transition-all ${
+                            className={`border rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between transition-all duration-300 ${
                               pointsEarned > 0
-                                ? "border-primary/30 bg-primary/[0.02]"
-                                : "border-border hover:border-slate-800"
+                                ? "border-emerald-500/40 bg-emerald-950/25 shadow-md shadow-emerald-950/20"
+                                : "border-slate-800 bg-slate-900/60 hover:border-slate-750"
                             }`}
                           >
                             {/* Header */}
@@ -960,7 +962,7 @@ export function PredictionsView({
                       return (
                         <div
                           key={match.id}
-                          className="glass-panel border border-border hover:border-border/80 rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between"
+                          className="border border-slate-700/85 hover:border-slate-500/85 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between bg-slate-900/85 hover:shadow-2xl transition-all duration-300"
                         >
                           {/* Header de la tarjeta */}
                           <div className="flex items-center justify-between mb-3.5 border-b border-border/20 pb-2.5">
@@ -1110,11 +1112,7 @@ export function PredictionsView({
                           <div className="mt-4 pt-4 border-t border-border/40 flex items-center justify-end min-h-[44px]">
                             {/* Acciones */}
                             <div>
-                              {!isPhaseActive ? (
-                                <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500/10 text-amber-500 font-bold uppercase text-[10px] rounded-xl border border-amber-500/20">
-                                  <Lock className="w-3.5 h-3.5" /> No Habilitado
-                                </span>
-                              ) : isLockedTime ? (
+                              {isLockedTime ? (
                                 <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-800 text-slate-500 font-bold uppercase text-[10px] rounded-xl border border-border/40">
                                   <Lock className="w-3.5 h-3.5" /> Bloqueado
                                 </span>
@@ -1394,10 +1392,10 @@ export function PredictionsView({
         {/* Banner de fase inactiva móvil */}
         {((mobileActiveTab === "groups" && !activePhase1) ||
           (mobileActiveTab === "knockout" && (!activePhase2 || !activePhase3))) && (
-          <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs shadow-md mb-3 animate-pulse">
-            <Lock className="w-4 h-4 flex-shrink-0" />
+          <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs shadow-md mb-3">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
             <div>
-              <span className="font-bold">Fase Deshabilitada:</span> No estás habilitado para participar en esta fase de la liga.
+              <span className="font-bold">Pago Pendiente:</span> Podés pronosticar, pero no figurarás en el Ranking hasta confirmar tu pago.
             </div>
           </div>
         )}
@@ -1470,7 +1468,11 @@ export function PredictionsView({
               // Agrupar partidos por fecha
               const grouped: { dateStr: string; matches: typeof mobileFilteredMatches }[] = [];
               mobileFilteredMatches.forEach((m) => {
-                const dateStr = m.date.toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+                const dateStr = m.date.toLocaleDateString("es-ES", {
+                  day: "numeric",
+                  month: "long",
+                  timeZone: "America/Argentina/Buenos_Aires"
+                });
                 let group = grouped.find((g) => g.dateStr === dateStr);
                 if (!group) {
                   group = { dateStr, matches: [] };
@@ -1492,7 +1494,7 @@ export function PredictionsView({
                       (match.stage === MatchStage.ROUND_32 || match.stage === MatchStage.ROUND_16) ? activePhase2 :
                       activePhase3;
                     const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
-                    const isLocked = new Date() > blockTime || !isPhaseActive;
+                    const isLocked = new Date() > blockTime;
 
                     const score = scores[match.id] || { home: "", away: "" };
                     const predictedWinner = predictedWinners[match.id];
@@ -1506,6 +1508,7 @@ export function PredictionsView({
                     const formattedTime = match.date.toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit",
+                      timeZone: "America/Argentina/Buenos_Aires"
                     });
 
                     if (isFinished) {
@@ -1515,10 +1518,10 @@ export function PredictionsView({
                       return (
                         <div
                           key={match.id}
-                          className={`glass-panel border rounded-2xl p-4 shadow relative overflow-hidden flex flex-col justify-between transition-all ${
+                          className={`border rounded-2xl p-4 shadow relative overflow-hidden flex flex-col justify-between transition-all duration-300 ${
                             pointsEarned > 0
-                              ? "border-primary/30 bg-primary/[0.03]"
-                              : "border-border"
+                              ? "border-emerald-500/40 bg-emerald-950/25 shadow-md shadow-emerald-950/20"
+                              : "border-slate-800 bg-slate-900/60"
                           }`}
                         >
                           {/* Header de la tarjeta móvil (Finalizado) */}
@@ -1592,10 +1595,10 @@ export function PredictionsView({
                     return (
                       <div
                         key={match.id}
-                        className={`glass-panel border rounded-2xl p-4 shadow-md relative overflow-hidden transition-all duration-300 ${
+                        className={`border rounded-2xl p-4 shadow-md relative overflow-hidden transition-all duration-300 ${
                           savedSuccess
-                            ? "border-primary/45 bg-primary/[0.03]"
-                            : "border-border bg-slate-900/10 hover:border-slate-800"
+                            ? "border-primary/50 bg-primary/[0.03] shadow-primary/10"
+                            : "border-slate-700/85 bg-slate-900/85 hover:border-slate-500/85"
                         }`}
                       >
                         {/* Header de la tarjeta móvil (Editable) */}
