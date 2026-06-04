@@ -803,13 +803,18 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
   };
 
   // --- HANDLER CAMBIO DE ROL DE LIGA ---
-  const handleToggleLeagueRole = (targetUserId: string, newRole: LeagueRole) => {
-    if (!viewingLeagueUsers) return;
-    const leagueId = viewingLeagueUsers.id;
+  const handleToggleLeagueRole = (targetUserId: string, newRole: LeagueRole, customLeagueId?: string) => {
+    const leagueId = customLeagueId || viewingLeagueUsers?.id;
+    if (!leagueId) return;
+
+    setUpdatingUserRoleMap((prev) => ({ ...prev, [targetUserId]: true }));
+    setUserRoleSuccessMap((prev) => ({ ...prev, [targetUserId]: false }));
 
     startTransition(async () => {
       if (isDemo) {
         await new Promise((resolve) => setTimeout(resolve, 500));
+        setUpdatingUserRoleMap((prev) => ({ ...prev, [targetUserId]: false }));
+        setUserRoleSuccessMap((prev) => ({ ...prev, [targetUserId]: true }));
         const user = users.find((u) => u.id === targetUserId);
         const m = user?.memberships.find((memb) => memb.league.id === leagueId);
         if (m) m.role = newRole;
@@ -818,7 +823,10 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       }
 
       const res = await updateUserLeagueRole(targetUserId, leagueId, newRole);
-      if (!res.success) {
+      setUpdatingUserRoleMap((prev) => ({ ...prev, [targetUserId]: false }));
+      if (res.success) {
+        setUserRoleSuccessMap((prev) => ({ ...prev, [targetUserId]: true }));
+      } else {
         triggerAlert("Error de Rol de Liga", res.error || "Ocurrió un error al actualizar el rol", "error");
       }
     });
@@ -1585,15 +1593,29 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                       <td className="py-3.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-3">
                           {successRole && <Check className="w-4 h-4 text-primary" />}
-                          <select
-                            disabled={isUpdatingRole}
-                            value={u.role}
-                            onChange={(e) => handleUpdateRole(u.id, e.target.value as Role)}
-                            className="px-2 py-1 bg-slate-950 border border-border focus:border-primary rounded-lg text-xs outline-none cursor-pointer"
-                          >
-                            <option value="USER">USER (Jugador)</option>
-                            <option value="ADMIN">ADMIN (Administrador)</option>
-                          </select>
+                          {usersLeagueId === "ALL" ? (
+                            <select
+                              disabled={isUpdatingRole}
+                              value={u.role}
+                              onChange={(e) => handleUpdateRole(u.id, e.target.value as Role)}
+                              className="px-2 py-1 bg-slate-950 border border-border focus:border-primary rounded-lg text-xs outline-none cursor-pointer"
+                            >
+                              <option value="USER">USER (Jugador)</option>
+                              <option value="ADMIN">ADMIN (Administrador)</option>
+                            </select>
+                          ) : (
+                            <select
+                              disabled={isUpdatingRole}
+                              value={m?.role || "MEMBER"}
+                              onChange={(e) => handleToggleLeagueRole(u.id, e.target.value as LeagueRole, usersLeagueId)}
+                              className="px-2 py-1 bg-slate-950 border border-border focus:border-primary rounded-lg text-xs outline-none cursor-pointer"
+                            >
+                              <option value="MEMBER">Jugador</option>
+                              <option value="COLLABORATOR">Colaborador</option>
+                              <option value="ADMIN">Admin Liga</option>
+                              <option value="OWNER">Owner Liga</option>
+                            </select>
+                          )}
                           <button
                             disabled={deletingUserMap[u.id]}
                             onClick={() => handleDeleteUser(u.id, u.name || u.email)}
