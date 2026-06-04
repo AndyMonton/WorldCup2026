@@ -231,7 +231,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   const isAdmin = session?.user?.role === "ADMIN";
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Inicio", href: "/dashboard", icon: LayoutDashboard },
     { name: "Pronósticos", href: "/predictions", icon: CalendarDays },
     { name: "Rankings", href: "/ranking", icon: Trophy },
     { name: "Reglas", href: "/rules", icon: BookOpen },

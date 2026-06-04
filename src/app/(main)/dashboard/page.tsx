@@ -4,6 +4,7 @@ import { MatchStage, MatchStatus } from "@prisma/client";
 import { Trophy, CalendarDays, Award, Timer, Sparkles, Building2, User2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { JoinLeagueCard } from "@/components/dashboard/join-league-card";
 
 // Datos de demostración en caso de error de base de datos o sin conexión
 const mockDashboardData = {
@@ -125,6 +126,8 @@ export default async function DashboardPage() {
     },
   };
 
+  let noLeague = false;
+
   try {
     const userId = session?.user?.id;
     if (!userId) {
@@ -156,14 +159,12 @@ export default async function DashboardPage() {
     }
 
     if (!membership) {
-      // Si el usuario no tiene liga (ej. admin recién logueado), usamos demo o vacío
-      throw new Error("No league membership");
-    }
-
-    data.league = {
-      name: membership.league.name,
-      inviteCode: membership.league.inviteCode,
-    };
+      noLeague = true;
+    } else {
+      data.league = {
+        name: membership.league.name,
+        inviteCode: membership.league.inviteCode,
+      };
 
     data.stats.department = membership.department;
     data.stats.internalGroup = membership.internalGroup;
@@ -329,7 +330,7 @@ export default async function DashboardPage() {
         isCompleted: !!(bonus.championId && bonus.runnerUpId && bonus.topScorerName),
       };
     }
-
+    }
   } catch (error) {
     // Si falla (por falta de tablas, conexión, etc.), cargamos datos demo para wow factor
     console.warn("Fallo al obtener datos reales del dashboard, usando datos mock. Error:", error);
@@ -337,6 +338,10 @@ export default async function DashboardPage() {
     if (session?.user) {
       data.user.name = session.user.name || session.user.email || "Usuario";
     }
+  }
+
+  if (noLeague) {
+    return <JoinLeagueCard />;
   }
 
   // Verificar si el primer partido ya comenzó para bloquear predicciones del torneo

@@ -44,12 +44,24 @@ export default async function RulesPage() {
         </p>
       </div>
 
-      {activeLeague && (
+      {activeLeague ? (
         <TransferAliasCard
           alias={activeLeague.transferAlias}
           amount={activeLeague.transferAmount}
           leagueName={activeLeague.name}
         />
+      ) : (
+        <div className="glass-panel border border-amber-500/20 bg-amber-500/5 rounded-2xl p-6 shadow-lg text-center flex flex-col items-center justify-center gap-3">
+          <div className="p-3 bg-amber-500/10 rounded-full text-amber-400">
+            <HelpCircle className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-base text-foreground">Inscripción y Pago Pendiente</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              Los datos para el pago de la inscripción (Alias de transferencia y Monto) se mostrarán aquí una vez que te unas a una liga privada.
+            </p>
+          </div>
+        </div>
       )}
 
 
