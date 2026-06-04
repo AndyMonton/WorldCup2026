@@ -672,77 +672,11 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* --- SECCIÓN 3: NOTICIAS, ACTIVIDAD Y PODIO --- */}
+      {/* --- SECCIÓN 3: PODIO Y ESPECIALES --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Lado Izquierdo: Noticias y Podio */}
+        {/* Lado Izquierdo: Podio */}
         <div className="lg:col-span-2 space-y-8">
-          
-          {/* Últimas Noticias */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black tracking-tight text-slate-100 uppercase flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                Últimas Noticias
-              </h3>
-              <a href="#" className="text-xs font-bold text-slate-400 hover:text-foreground flex items-center gap-1">
-                Ver todo <span className="text-primary">→</span>
-              </a>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Noticia 1 */}
-              <div className="glass-panel rounded-2xl overflow-hidden border border-border shadow-md hover:border-slate-800 transition-all flex flex-col justify-between bg-slate-900/5">
-                <div>
-                  <img
-                    src="/images/news_trophy.png"
-                    alt=""
-                    className="w-full h-40 object-cover border-b border-border/25"
-                  />
-                  <div className="p-4 space-y-2">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">
-                      Torneo
-                    </span>
-                    <h4 className="font-extrabold text-sm text-slate-200 line-clamp-2 leading-snug">
-                      Sorteo de grupos definido para la fase final
-                    </h4>
-                    <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                      Los equipos ya conocen sus caminos hacia la final en un sorteo histórico con cruces apasionantes.
-                    </p>
-                  </div>
-                </div>
-                <div className="p-4 pt-0 text-[10px] text-slate-500 font-semibold">
-                  Hace 2 horas
-                </div>
-              </div>
-
-              {/* Noticia 2 */}
-              <div className="glass-panel rounded-2xl overflow-hidden border border-border shadow-md hover:border-slate-800 transition-all flex flex-col justify-between bg-slate-900/5">
-                <div>
-                  <img
-                    src="/images/news_ball.png"
-                    alt=""
-                    className="w-full h-40 object-cover border-b border-border/25"
-                  />
-                  <div className="p-4 space-y-2">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">
-                      Jugadores
-                    </span>
-                    <h4 className="font-extrabold text-sm text-slate-200 line-clamp-2 leading-snug">
-                      Las figuras que podrían perderse la gran cita
-                    </h4>
-                    <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                      Repasamos la lista de lesionados y dudas para el partido inaugural que mantiene en vilo a las selecciones.
-                    </p>
-                  </div>
-                </div>
-                <div className="p-4 pt-0 text-[10px] text-slate-500 font-semibold">
-                  Hace 4 horas
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Podio de la Liga */}
           <div className="glass-panel rounded-2xl p-6 border border-border shadow-lg bg-slate-900/10">
             <div className="flex items-center gap-2 mb-6">
@@ -804,78 +738,8 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Lado Derecho: Actividad y Especiales */}
+        {/* Lado Derecho: Especiales */}
         <div className="lg:col-span-1 space-y-8">
-          
-          {/* Actividad */}
-          <div className="glass-panel rounded-2xl p-6 border border-border shadow-lg flex flex-col bg-slate-900/10">
-            <h4 className="font-bold text-lg mb-6 uppercase tracking-wider text-slate-200 border-b border-border/20 pb-2">
-              Actividad
-            </h4>
-
-            <div className="space-y-4">
-              {/* Item 1 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-border/40 hover:border-slate-800 transition-all">
-                <div className="w-8 h-8 rounded-full bg-slate-850 border border-border flex items-center justify-center text-xs font-bold text-slate-300">
-                  M
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-300 leading-normal">
-                    <span className="font-bold text-foreground">Mateo</span> acertó el resultado exacto de <span className="font-bold text-primary">BRA vs ESP</span>
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                    +100 pts &bull; Hace 5 min
-                  </p>
-                </div>
-              </div>
-
-              {/* Item 2 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-border/40 hover:border-slate-800 transition-all">
-                <div className="w-8 h-8 rounded-full bg-slate-850 border border-border flex items-center justify-center text-xs font-bold text-slate-300">
-                  L
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-300 leading-normal">
-                    <span className="font-bold text-foreground">Lucía</span> subió 45 puestos en el ranking global
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                    Hace 12 min
-                  </p>
-                </div>
-              </div>
-
-              {/* Item 3 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-border/40 hover:border-slate-800 transition-all">
-                <div className="w-8 h-8 rounded-full bg-slate-850 border border-border flex items-center justify-center text-xs font-bold text-slate-300">
-                  ⚽
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-300 leading-normal">
-                    Nueva liga privada creada: <span className="font-bold text-gold">"Amigos del Fútbol"</span>
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                    Hace 25 min
-                  </p>
-                </div>
-              </div>
-
-              {/* Item 4 */}
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-border/40 hover:border-slate-800 transition-all">
-                <div className="w-8 h-8 rounded-full bg-slate-850 border border-border flex items-center justify-center text-xs font-bold text-slate-300">
-                  S
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-300 leading-normal">
-                    <span className="font-bold text-foreground">Sergio</span> actualizó su pronóstico para el partido inaugural
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                    Hace 40 min
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Pronósticos Especiales */}
           <div className="glass-panel rounded-2xl p-6 border border-border shadow-lg relative overflow-hidden bg-slate-900/10">
             <div className="flex items-center justify-between mb-4">
