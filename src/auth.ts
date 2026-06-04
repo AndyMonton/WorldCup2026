@@ -53,17 +53,24 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.name = user.name;
+        token.picture = user.image;
       }
       
-      // Consultar la base de datos para obtener la imagen y nombre frescos en cada actualización
+      // Consultar la base de datos para obtener la imagen, nombre y rol frescos en cada actualización
       if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { image: true, name: true },
-        });
-        if (dbUser) {
-          token.picture = dbUser.image;
-          token.name = dbUser.name;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { image: true, name: true, role: true },
+          });
+          if (dbUser) {
+            token.picture = dbUser.image;
+            token.name = dbUser.name;
+            token.role = dbUser.role;
+          }
+        } catch (error) {
+          console.error("Error en callback jwt al buscar usuario:", error);
         }
       }
       return token;
