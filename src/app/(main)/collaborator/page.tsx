@@ -53,10 +53,15 @@ export default async function CollaboratorPage() {
     redirect("/dashboard");
   }
 
-  // Si tiene permisos, obtener todos los miembros de la liga activa
+  // Si tiene permisos, obtener todos los miembros de la liga activa (excluyendo administradores globales)
   const memberships = await prisma.leagueMembership.findMany({
     where: {
       leagueId: activeLeagueId,
+      user: {
+        role: {
+          not: "ADMIN",
+        },
+      },
     },
     include: {
       user: {
