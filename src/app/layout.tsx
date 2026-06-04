@@ -10,10 +10,10 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Prode Mundial de Fútbol 2026 | Macena SA",
+  title: "Prode Mundial de Fútbol 2026 | Andres® 2026",
   description: "Plataforma de pronósticos para el Mundial de Fútbol 2026. Jugá, competí en ligas privadas y seguí las clasificaciones en tiempo real.",
-  keywords: "Prode, Mundial 2026, Fútbol, Macena SA, Pronósticos, Clasificación, Ligas",
-  authors: [{ name: "Macena SA" }],
+  keywords: "Prode, Mundial 2026, Fútbol, Andres® 2026, Pronósticos, Clasificación, Ligas",
+  authors: [{ name: "Andres® 2026" }],
   icons: {
     icon: "/favicon.ico",
   },
