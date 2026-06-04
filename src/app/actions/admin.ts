@@ -694,4 +694,43 @@ export async function adminResetUserPassword(targetUserId: string, newPassword: 
   }
 }
 
+/**
+ * Actualiza el nombre de una liga específica.
+ */
+export async function updateLeagueName(leagueId: string, newName: string) {
+  try {
+    const session = await auth();
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
+    }
+
+    const name = newName.trim();
+    if (!name) {
+      return { success: false, error: "El nombre de la liga no puede estar vacío." };
+    }
+
+    await prisma.league.update({
+      where: { id: leagueId },
+      data: { name },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "UPDATE_LEAGUE_NAME",
+        details: `Nombre de la liga ID ${leagueId} actualizado a: ${name}.`,
+      },
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/dashboard");
+    revalidatePath("/ranking");
+
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error("Error al actualizar nombre de la liga:", error);
+    return { success: false, error: "Ocurrió un error inesperado al actualizar el nombre." };
+  }
+}
+
 

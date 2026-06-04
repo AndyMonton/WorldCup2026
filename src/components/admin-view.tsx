@@ -2,7 +2,7 @@
  
 import React, { useState, useEffect, useTransition } from "react";
 import { MatchStage, MatchStatus, Team, League, Role, AuditLog } from "@prisma/client";
-import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword } from "@/app/actions/admin";
+import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword, updateLeagueName } from "@/app/actions/admin";
 import { getSectorsForLeague } from "@/lib/sectors";
 import { CustomDialog } from "@/components/ui/custom-dialog";
 import {
@@ -22,6 +22,7 @@ import {
   Lock,
   Key,
   X,
+  Pencil,
 } from "lucide-react";
  
 interface MatchItem {
@@ -217,6 +218,54 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
       onConfirm,
       confirmText,
       cancelText,
+    });
+  };
+
+  // Estados para modificar nombre de liga
+  const [editingLeagueId, setEditingLeagueId] = useState<string | null>(null);
+  const [editingLeagueName, setEditingLeagueName] = useState("");
+  const [savingLeagueName, setSavingLeagueName] = useState(false);
+
+  // Estados para ver usuarios de liga
+  const [viewingLeagueUsers, setViewingLeagueUsers] = useState<{ id: string; name: string } | null>(null);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+
+  const handleSaveLeagueName = (leagueId: string) => {
+    const trimmedName = editingLeagueName.trim();
+    if (!trimmedName) {
+      triggerAlert("Error", "El nombre de la liga no puede estar vacío.", "error");
+      return;
+    }
+
+    setSavingLeagueName(true);
+    startTransition(async () => {
+      if (isDemo) {
+        // Modo demostración
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const updatedLeagues = localLeagues.map((l) =>
+          l.id === leagueId ? { ...l, name: trimmedName } : l
+        );
+        setLocalLeagues(updatedLeagues);
+        setEditingLeagueId(null);
+        setEditingLeagueName("");
+        setSavingLeagueName(false);
+        triggerAlert("Éxito (Demo)", "Nombre de liga actualizado con éxito (Modo Demo).", "success");
+        return;
+      }
+
+      const res = await updateLeagueName(leagueId, trimmedName);
+      setSavingLeagueName(false);
+      if (res.success) {
+        const updatedLeagues = localLeagues.map((l) =>
+          l.id === leagueId ? { ...l, name: trimmedName } : l
+        );
+        setLocalLeagues(updatedLeagues);
+        setEditingLeagueId(null);
+        setEditingLeagueName("");
+        triggerAlert("Éxito", "Nombre de liga actualizado con éxito.", "success");
+      } else {
+        triggerAlert("Error", res.error || "Ocurrió un error al guardar.", "error");
+      }
     });
   };
 
@@ -780,6 +829,30 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
     return true;
   });
 
+  // Filtrado de usuarios de liga seleccionada
+  const filteredLeagueUsers = viewingLeagueUsers
+    ? users
+        .filter((u) => u.memberships.some((m) => m.league.id === viewingLeagueUsers.id))
+        .map((u) => {
+          const membership = u.memberships.find((m) => m.league.id === viewingLeagueUsers.id);
+          return {
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            department: membership?.department || "PENDIENTE",
+          };
+        })
+        .filter((u) => {
+          const search = userSearchTerm.trim().toLowerCase();
+          if (search === "") return true;
+          return (
+            (u.name?.toLowerCase().includes(search) || false) ||
+            u.email.toLowerCase().includes(search) ||
+            u.department.toLowerCase().includes(search)
+          );
+        })
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Cabecera Admin */}
@@ -1176,12 +1249,59 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                     <th className="py-3 px-2">Código</th>
                     <th className="py-3 px-2 text-center">Miembros</th>
                     <th className="py-3 px-2">Alias / Importe de Transferencia</th>
+                    <th className="py-3 px-2 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {localLeagues.map((l) => (
                     <tr key={l.id} className="hover:bg-slate-900/10">
-                      <td className="py-3.5 px-2 font-semibold text-foreground">{l.name}</td>
+                      <td className="py-3.5 px-2 font-semibold text-foreground">
+                        {editingLeagueId === l.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={editingLeagueName}
+                              onChange={(e) => setEditingLeagueName(e.target.value)}
+                              disabled={savingLeagueName}
+                              className="px-2 py-1 bg-slate-950 border border-border/60 focus:border-primary rounded-lg text-xs text-foreground outline-none w-44 transition-all"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleSaveLeagueName(l.id)}
+                              disabled={savingLeagueName}
+                              className="p-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-50 cursor-pointer"
+                              title="Guardar"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingLeagueId(null);
+                                setEditingLeagueName("");
+                              }}
+                              disabled={savingLeagueName}
+                              className="p-1 text-rose-400 hover:text-rose-300 cursor-pointer"
+                              title="Cancelar"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 group">
+                            <span>{l.name}</span>
+                            <button
+                              onClick={() => {
+                                setEditingLeagueId(l.id);
+                                setEditingLeagueName(l.name);
+                              }}
+                              className="p-1 text-slate-500 hover:text-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                              title="Editar nombre"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td className="py-3.5 px-2 text-slate-400 font-mono tracking-wider">{l.inviteCode}</td>
                       <td className="py-3.5 px-2 text-center font-bold text-primary">{l.membershipsCount}</td>
                       <td className="py-3.5 px-2">
@@ -1192,6 +1312,16 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                           isDemo={isDemo}
                           onError={(err) => triggerAlert("Error al Guardar", err, "error")}
                         />
+                      </td>
+                      <td className="py-3.5 px-2 text-center">
+                        <button
+                          onClick={() => setViewingLeagueUsers({ id: l.id, name: l.name })}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-full btn-premium-secondary border border-border/40 hover:border-slate-600 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                          title="Ver usuarios registrados"
+                        >
+                          <Users className="w-3 h-3" />
+                          <span>Usuarios</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1725,6 +1855,86 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                 {isResetting ? "Restableciendo..." : "Guardar Contraseña"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal - Ver Usuarios de la Liga */}
+      {viewingLeagueUsers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg glass-panel border border-border rounded-2xl shadow-2xl p-6 relative max-h-[80vh] flex flex-col">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setViewingLeagueUsers(null);
+                setUserSearchTerm("");
+              }}
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-foreground rounded-lg hover:bg-slate-800/50 transition-all outline-none"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4 flex-shrink-0">
+              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-foreground">Usuarios Registrados</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Liga: {viewingLeagueUsers.name}</p>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative mb-4 flex-shrink-0">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre, email o sector..."
+                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-border/60 focus:border-primary rounded-xl text-xs text-foreground placeholder-slate-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* User List Container */}
+            <div className="overflow-y-auto flex-1 pr-1 scrollbar-thin">
+              {filteredLeagueUsers.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-500">
+                  No se encontraron usuarios para esta liga.
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border/40 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="py-2 px-1">Usuario</th>
+                      <th className="py-2 px-1">Sector</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/20">
+                    {filteredLeagueUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-800/20">
+                        <td className="py-2.5 px-1">
+                          <div className="font-semibold text-foreground">{u.name || "Invitado (Sin Nombre)"}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{u.email}</div>
+                        </td>
+                        <td className="py-2.5 px-1">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            u.department === "PENDIENTE" 
+                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" 
+                              : "bg-primary/10 text-primary border border-primary/20"
+                          }`}>
+                            {u.department}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         </div>
       )}
