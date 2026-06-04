@@ -1,6 +1,6 @@
 "use client";
  
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { MatchStage, MatchStatus, Team, League, Role, AuditLog } from "@prisma/client";
 import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword } from "@/app/actions/admin";
 import { getSectorsForLeague } from "@/lib/sectors";
@@ -166,6 +166,14 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
   const [updatingPhaseMap, setUpdatingPhaseMap] = useState<Record<string, boolean>>({});
   const [updatingPaymentMap, setUpdatingPaymentMap] = useState<Record<string, boolean>>({});
   const [updatingBulk, setUpdatingBulk] = useState(false);
+
+  useEffect(() => {
+    setLocalLeagues(leagues);
+  }, [leagues]);
+
+  useEffect(() => {
+    setMatches(initialMatches);
+  }, [initialMatches]);
 
   const handleTogglePayment = (userId: string, currentStatus: boolean) => {
     if (usersLeagueId === "ALL") return;
