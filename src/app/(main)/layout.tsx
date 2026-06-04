@@ -48,6 +48,7 @@ export default async function MainLayout({
     leagueName: m.league.name,
     isActive: m.leagueId === activeMembership.leagueId,
     department: m.department,
+    role: m.role,
   }));
 
   return <AppLayout memberships={formattedMemberships}>{children}</AppLayout>;

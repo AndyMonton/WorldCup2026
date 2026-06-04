@@ -7,9 +7,17 @@ interface TransferAliasCardProps {
   alias: string | null;
   amount: number | null;
   leagueName: string;
+  transferAccountName: string | null;
+  transferPhone: string | null;
 }
 
-export function TransferAliasCard({ alias, amount, leagueName }: TransferAliasCardProps) {
+export function TransferAliasCard({
+  alias,
+  amount,
+  leagueName,
+  transferAccountName,
+  transferPhone,
+}: TransferAliasCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -32,11 +40,11 @@ export function TransferAliasCard({ alias, amount, leagueName }: TransferAliasCa
       {/* Luz de fondo sutil */}
       <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="flex items-start gap-4 z-10">
+      <div className="flex items-start gap-4 z-10 flex-1">
         <div className="p-3.5 bg-primary/15 border border-primary/25 text-primary rounded-2xl flex-shrink-0 animate-pulse">
           <CreditCard className="w-8 h-8" />
         </div>
-        <div className="space-y-1 text-center md:text-left">
+        <div className="space-y-1 text-center md:text-left w-full">
           <h2 className="text-lg font-extrabold text-foreground tracking-tight">
             Inscripción y Pago Requerido
           </h2>
@@ -48,6 +56,23 @@ export function TransferAliasCard({ alias, amount, leagueName }: TransferAliasCa
             <p className="text-sm font-bold text-slate-200 pt-1">
               Importe a transferir: <span className="text-gradient text-base font-extrabold">{formattedAmount}</span>
             </p>
+          )}
+          {(transferAccountName || transferPhone) && (
+            <div className="text-xs text-slate-300 mt-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-2.5 max-w-lg leading-relaxed text-left">
+              Una vez realizada la transferencia, enviar el comprobante{" "}
+              {transferAccountName && (
+                <>
+                  a <span className="font-bold text-foreground">{transferAccountName}</span>
+                </>
+              )}
+              {transferAccountName && transferPhone && " "}
+              {transferPhone && (
+                <>
+                  al teléfono <span className="font-bold text-foreground">{transferPhone}</span>
+                </>
+              )}
+              .
+            </div>
           )}
         </div>
       </div>

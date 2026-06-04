@@ -14,6 +14,7 @@ enum Role {
 enum LeagueRole {
   OWNER
   ADMIN
+  COLLABORATOR
   MEMBER
 }
 
@@ -91,11 +92,13 @@ model League {
   name           String
   inviteCode     String             @unique
   departments    String?            // JSON string array of sectors/departments
-  transferAlias  String?
-  transferAmount Float?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  memberships    LeagueMembership[]
+  transferAlias       String?
+  transferAmount      Float?
+  transferAccountName String?
+  transferPhone       String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  memberships         LeagueMembership[]
 }
 
 model LeagueMembership {

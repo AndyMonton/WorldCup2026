@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { MatchStatus, MatchStage, Role } from "@prisma/client";
+import { MatchStatus, MatchStage, Role, LeagueRole } from "@prisma/client";
 import { calculateScore } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
@@ -575,7 +575,9 @@ export async function updateUsersPhaseStatus(
 export async function updateLeagueTransferInfo(
   leagueId: string,
   transferAlias: string,
-  transferAmount: number | null
+  transferAmount: number | null,
+  transferAccountName: string | null,
+  transferPhone: string | null
 ) {
   try {
     const session = await auth();
@@ -583,11 +585,16 @@ export async function updateLeagueTransferInfo(
       return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
     }
 
+    const accountName = transferAccountName ? transferAccountName.trim().substring(0, 200) : null;
+    const phone = transferPhone ? transferPhone.trim().substring(0, 25) : null;
+
     await prisma.league.update({
       where: { id: leagueId },
       data: {
         transferAlias: transferAlias.trim() || null,
         transferAmount: transferAmount !== null && !isNaN(transferAmount) ? transferAmount : null,
+        transferAccountName: accountName,
+        transferPhone: phone,
       },
     });
 
@@ -595,7 +602,7 @@ export async function updateLeagueTransferInfo(
       data: {
         userId: session.user.id,
         action: "UPDATE_LEAGUE_TRANSFER_INFO",
-        details: `Información de transferencia de liga ID ${leagueId} actualizada. Alias: ${transferAlias.trim() || 'Ninguno'}. Importe: ${transferAmount || 'Ninguno'}.`,
+        details: `Información de transferencia de liga ID ${leagueId} actualizada. Alias: ${transferAlias.trim() || 'Ninguno'}. Importe: ${transferAmount || 'Ninguno'}. Titular: ${accountName || 'Ninguno'}. Tel: ${phone || 'Ninguno'}.`,
       },
     });
 
@@ -615,8 +622,30 @@ export async function updateUserPaymentStatus(
 ) {
   try {
     const session = await auth();
-    if (!session || session.user?.role !== "ADMIN") {
-      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
+    if (!session || !session.user) {
+      return { success: false, error: "Acceso denegado. Se requiere iniciar sesión." };
+    }
+
+    // Permitir si es ADMIN global
+    let isAllowed = session.user?.role === "ADMIN";
+
+    // Si no es ADMIN global, verificar si es COLLABORATOR de la liga
+    if (!isAllowed) {
+      const callerMembership = await prisma.leagueMembership.findUnique({
+        where: {
+          userId_leagueId: {
+            userId: session.user.id,
+            leagueId,
+          },
+        },
+      });
+      if (callerMembership && callerMembership.role === "COLLABORATOR") {
+        isAllowed = true;
+      }
+    }
+
+    if (!isAllowed) {
+      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador o colaborador para esta liga." };
     }
 
     const membership = await prisma.leagueMembership.findUnique({
@@ -641,16 +670,63 @@ export async function updateUserPaymentStatus(
       data: {
         userId: session.user.id,
         action: "UPDATE_USER_PAYMENT_STATUS",
-        details: `Estado de pago del usuario ID ${userId} en liga ID ${leagueId} actualizado a: ${hasPaid ? 'PAGADO' : 'PENDIENTE'}.`,
+        details: `Estado de pago del usuario ID ${userId} en liga ID ${leagueId} actualizado a: ${hasPaid ? 'PAGADO' : 'PENDIENTE'} por usuario ID ${session.user.id}.`,
       },
     });
 
     revalidatePath("/admin");
     revalidatePath("/ranking");
+    revalidatePath("/collaborator");
     return { success: true, error: null };
   } catch (error: any) {
     console.error("Error al actualizar estado de pago:", error);
     return { success: false, error: "Ocurrió un error inesperado al actualizar el estado de pago." };
+  }
+}
+
+export async function updateUserLeagueRole(
+  targetUserId: string,
+  leagueId: string,
+  newRole: LeagueRole
+) {
+  try {
+    const session = await auth();
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
+    }
+
+    const membership = await prisma.leagueMembership.findUnique({
+      where: {
+        userId_leagueId: {
+          userId: targetUserId,
+          leagueId,
+        },
+      },
+    });
+
+    if (!membership) {
+      return { success: false, error: "No se encontró la membresía del usuario en la liga." };
+    }
+
+    await prisma.leagueMembership.update({
+      where: { id: membership.id },
+      data: { role: newRole },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "UPDATE_USER_LEAGUE_ROLE",
+        details: `Rol de liga de usuario ID ${targetUserId} en liga ID ${leagueId} actualizado a: ${newRole}.`,
+      },
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/collaborator");
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error("Error al actualizar rol de liga:", error);
+    return { success: false, error: "Ocurrió un error inesperado al actualizar el rol de la liga." };
   }
 }
 

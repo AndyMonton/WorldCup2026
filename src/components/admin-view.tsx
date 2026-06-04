@@ -1,8 +1,8 @@
 "use client";
  
 import React, { useState, useEffect, useTransition } from "react";
-import { MatchStage, MatchStatus, Team, League, Role, AuditLog } from "@prisma/client";
-import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword, updateLeagueName } from "@/app/actions/admin";
+import { MatchStage, MatchStatus, Team, League, Role, AuditLog, LeagueRole } from "@prisma/client";
+import { saveMatchResult, updateUserRole, createNewLeague, deleteUser, addLeagueSector, deleteLeagueSector, updateUsersPhaseStatus, updateLeagueTransferInfo, updateUserPaymentStatus, adminResetUserPassword, updateLeagueName, updateUserLeagueRole } from "@/app/actions/admin";
 import { getSectorsForLeague } from "@/lib/sectors";
 import { CustomDialog } from "@/components/ui/custom-dialog";
 import {
@@ -61,6 +61,7 @@ interface UserItem {
     activePhase2: boolean;
     activePhase3: boolean;
     hasPaid: boolean;
+    role: LeagueRole;
   }[];
 }
  
@@ -78,17 +79,23 @@ function LeagueTransferInfoCell({
   leagueId,
   initialAlias,
   initialAmount,
+  initialAccountName,
+  initialPhone,
   isDemo,
   onError,
 }: {
   leagueId: string;
   initialAlias: string;
   initialAmount: number | null;
+  initialAccountName: string | null;
+  initialPhone: string | null;
   isDemo: boolean;
   onError?: (err: string) => void;
 }) {
   const [alias, setAlias] = useState(initialAlias);
   const [amount, setAmount] = useState(initialAmount !== null ? initialAmount.toString() : "");
+  const [accountName, setAccountName] = useState(initialAccountName || "");
+  const [phone, setPhone] = useState(initialPhone || "");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [, startTransition] = React.useTransition();
@@ -107,7 +114,13 @@ function LeagueTransferInfoCell({
         return;
       }
 
-      const res = await updateLeagueTransferInfo(leagueId, alias, parsedAmount);
+      const res = await updateLeagueTransferInfo(
+        leagueId,
+        alias,
+        parsedAmount,
+        accountName,
+        phone
+      );
       setSaving(false);
       if (res.success) {
         setSuccess(true);
@@ -121,7 +134,7 @@ function LeagueTransferInfoCell({
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
         <input
           type="text"
           value={alias}
@@ -136,11 +149,25 @@ function LeagueTransferInfoCell({
           placeholder="Monto ($)"
           className="px-2 py-1 bg-slate-950 border border-border/60 focus:border-primary rounded-lg text-xs text-foreground placeholder-slate-600 outline-none w-24 transition-all"
         />
+        <input
+          type="text"
+          value={accountName}
+          onChange={(e) => setAccountName(e.target.value)}
+          placeholder="Titular de la cuenta"
+          className="px-2 py-1 bg-slate-950 border border-border/60 focus:border-primary rounded-lg text-xs text-foreground placeholder-slate-600 outline-none w-36 transition-all"
+        />
+        <input
+          type="text"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Celular para comprobante"
+          className="px-2 py-1 bg-slate-950 border border-border/60 focus:border-primary rounded-lg text-xs text-foreground placeholder-slate-600 outline-none w-24 transition-all"
+        />
       </div>
       <button
         onClick={handleSave}
         disabled={saving}
-        className="px-3 py-1 text-[9px] min-w-[65px] btn-premium"
+        className="px-3 py-1 text-[9px] min-w-[65px] btn-premium self-end sm:self-center"
       >
         {saving ? "..." : success ? <Check className="w-3.5 h-3.5 text-white" /> : "Guardar"}
       </button>
@@ -775,6 +802,28 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
     });
   };
 
+  // --- HANDLER CAMBIO DE ROL DE LIGA ---
+  const handleToggleLeagueRole = (targetUserId: string, newRole: LeagueRole) => {
+    if (!viewingLeagueUsers) return;
+    const leagueId = viewingLeagueUsers.id;
+
+    startTransition(async () => {
+      if (isDemo) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const user = users.find((u) => u.id === targetUserId);
+        const m = user?.memberships.find((memb) => memb.league.id === leagueId);
+        if (m) m.role = newRole;
+        setLocalLeagues([...localLeagues]);
+        return;
+      }
+
+      const res = await updateUserLeagueRole(targetUserId, leagueId, newRole);
+      if (!res.success) {
+        triggerAlert("Error de Rol de Liga", res.error || "Ocurrió un error al actualizar el rol", "error");
+      }
+    });
+  };
+
   // --- HANDLER ELIMINACIÓN DE USUARIO ---
   const handleDeleteUser = (targetUserId: string, name: string) => {
     triggerConfirm(
@@ -840,6 +889,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
             name: u.name,
             email: u.email,
             department: membership?.department || "PENDIENTE",
+            role: membership?.role || "MEMBER",
           };
         })
         .filter((u) => {
@@ -1309,6 +1359,8 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                           leagueId={l.id}
                           initialAlias={l.transferAlias || ""}
                           initialAmount={l.transferAmount}
+                          initialAccountName={l.transferAccountName || ""}
+                          initialPhone={l.transferPhone || ""}
                           isDemo={isDemo}
                           onError={(err) => triggerAlert("Error al Guardar", err, "error")}
                         />
@@ -1911,6 +1963,7 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                     <tr className="border-b border-border/40 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <th className="py-2 px-1">Usuario</th>
                       <th className="py-2 px-1">Sector</th>
+                      <th className="py-2 px-1 text-right">Rol</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/20">
@@ -1928,6 +1981,18 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                           }`}>
                             {u.department}
                           </span>
+                        </td>
+                        <td className="py-2.5 px-1 text-right">
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleToggleLeagueRole(u.id, e.target.value as LeagueRole)}
+                            className="px-2 py-1 bg-slate-950 border border-border focus:border-primary rounded-lg text-[10px] text-foreground outline-none cursor-pointer"
+                          >
+                            <option value="MEMBER">Jugador</option>
+                            <option value="COLLABORATOR">Colaborador</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="OWNER">Owner</option>
+                          </select>
                         </td>
                       </tr>
                     ))}

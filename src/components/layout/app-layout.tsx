@@ -22,6 +22,7 @@ import {
   Building2,
   ArrowRight,
   Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { setActiveLeague, joinNewLeague } from "@/app/actions/league";
 import { updateUserImage, changeUserPassword } from "@/app/actions/user";
@@ -32,6 +33,7 @@ interface LeagueItem {
   leagueName: string;
   isActive: boolean;
   department: string;
+  role?: string;
 }
 
 interface AppLayoutProps {
@@ -229,6 +231,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   };
 
   const isAdmin = session?.user?.role === "ADMIN";
+  const isCollaborator = activeLeague?.role === "COLLABORATOR";
 
   const navigation = [
     { name: "Inicio", href: "/dashboard", icon: LayoutDashboard },
@@ -236,6 +239,10 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
     { name: "Rankings", href: "/ranking", icon: Trophy },
     { name: "Reglas", href: "/rules", icon: BookOpen },
   ];
+
+  if (isCollaborator) {
+    navigation.push({ name: "Control de Pagos", href: "/collaborator", icon: ShieldCheck });
+  }
 
   if (isAdmin) {
     navigation.push({ name: "Administración", href: "/admin", icon: ShieldAlert });

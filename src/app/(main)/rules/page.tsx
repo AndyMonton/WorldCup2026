@@ -49,6 +49,8 @@ export default async function RulesPage() {
           alias={activeLeague.transferAlias}
           amount={activeLeague.transferAmount}
           leagueName={activeLeague.name}
+          transferAccountName={activeLeague.transferAccountName}
+          transferPhone={activeLeague.transferPhone}
         />
       ) : (
         <div className="glass-panel border border-amber-500/20 bg-amber-500/5 rounded-2xl p-6 shadow-lg text-center flex flex-col items-center justify-center gap-3">
