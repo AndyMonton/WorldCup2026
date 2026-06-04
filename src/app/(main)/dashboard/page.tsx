@@ -607,9 +607,17 @@ export default async function DashboardPage() {
 
         {/* Galería de Estadios */}
         <div className="lg:col-span-2 glass-panel border border-border rounded-3xl p-6 shadow-xl relative overflow-hidden bg-slate-900/10">
-          <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight mb-2">
-            Estadios Destacados
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-black text-slate-100 uppercase tracking-tight">
+              Estadios Destacados
+            </h3>
+            <Link
+              href="/info-mundial"
+              className="text-xs font-bold text-primary hover:underline flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20 hover:bg-primary/20 transition-all cursor-pointer"
+            >
+              + Info
+            </Link>
+          </div>
           <p className="text-xs text-slate-400 mb-6">
             Conoce los templos del fútbol donde se escribirá la historia del Mundial 2026.
           </p>
