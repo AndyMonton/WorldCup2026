@@ -3,135 +3,6 @@ import { prisma } from "@/lib/db";
 import { RankingView } from "@/components/ranking-view";
 import { cookies } from "next/headers";
 
-// Mock data en caso de que falle la base de datos (Modo Demostración)
-const mockMembers = [
-  {
-    id: "m-user-1",
-    name: "Sofía Rodríguez",
-    department: "Ventas y Marketing",
-    internalGroup: null,
-    points: 37,
-    pointsPhase1: 22,
-    pointsPhase2: 15,
-    pointsPhase3: 0,
-    exactCount: 3,
-    differenceCount: 1,
-    tendencyCount: 0,
-    consolationCount: 0,
-  },
-  {
-    id: "m-user-2",
-    name: "Martín Gómez",
-    department: "Programación",
-    internalGroup: "Amigos del Gym",
-    points: 32,
-    pointsPhase1: 20,
-    pointsPhase2: 12,
-    pointsPhase3: 0,
-    exactCount: 2,
-    differenceCount: 1,
-    tendencyCount: 1,
-    consolationCount: 0,
-  },
-  {
-    id: "m-user-3",
-    name: "Ana Clara Silva",
-    department: "Soporte Técnico",
-    internalGroup: "Asado",
-    points: 25,
-    pointsPhase1: 15,
-    pointsPhase2: 10,
-    pointsPhase3: 0,
-    exactCount: 2,
-    differenceCount: 0,
-    tendencyCount: 1,
-    consolationCount: 0,
-  },
-  {
-    id: "m-user-current", // El usuario logueado en modo demo
-    name: "Sergio Fernandez",
-    department: "Programación",
-    internalGroup: "Amigos del Gym",
-    points: 20,
-    pointsPhase1: 11,
-    pointsPhase2: 9,
-    pointsPhase3: 0,
-    exactCount: 2,
-    differenceCount: 0,
-    tendencyCount: 0,
-    consolationCount: 2,
-  },
-  {
-    id: "m-user-5",
-    name: "Carlos Bianchi",
-    department: "Operaciones",
-    internalGroup: null,
-    points: 22,
-    pointsPhase1: 12,
-    pointsPhase2: 10,
-    pointsPhase3: 0,
-    exactCount: 1,
-    differenceCount: 1,
-    tendencyCount: 1,
-    consolationCount: 1,
-  },
-  {
-    id: "m-user-6",
-    name: "Lucía Fernández",
-    department: "Recursos Humanos",
-    internalGroup: "Asado",
-    points: 20,
-    pointsPhase1: 11,
-    pointsPhase2: 9,
-    pointsPhase3: 0,
-    exactCount: 1,
-    differenceCount: 0,
-    tendencyCount: 2,
-    consolationCount: 2,
-  },
-  {
-    id: "m-user-7",
-    name: "Esteban Quito",
-    department: "Soporte Técnico",
-    internalGroup: "Amigos del Gym",
-    points: 15,
-    pointsPhase1: 10,
-    pointsPhase2: 5,
-    pointsPhase3: 0,
-    exactCount: 1,
-    differenceCount: 0,
-    tendencyCount: 1,
-    consolationCount: 3,
-  },
-  {
-    id: "m-user-8",
-    name: "Gabriela Sabatini",
-    department: "Administración",
-    internalGroup: null,
-    points: 19,
-    pointsPhase1: 14,
-    pointsPhase2: 5,
-    pointsPhase3: 0,
-    exactCount: 0,
-    differenceCount: 2,
-    tendencyCount: 1,
-    consolationCount: 0,
-  },
-  {
-    id: "m-user-9",
-    name: "Diego Maradona",
-    department: "Programación",
-    internalGroup: "Amigos del Gym",
-    points: 15,
-    pointsPhase1: 15,
-    pointsPhase2: 0,
-    pointsPhase3: 0,
-    exactCount: 1,
-    differenceCount: 0,
-    tendencyCount: 1,
-    consolationCount: 0,
-  },
-];
 
 export default async function RankingPage() {
   const session = await auth();
@@ -173,19 +44,20 @@ export default async function RankingPage() {
       throw new Error("No league membership");
     }
 
-    // 2. Obtener todas las membresías de esa liga ordenadas provisionalmente (excluyendo administradores y usuarios sin pago confirmado)
+    // 2. Obtener todas las membresías de esa liga (excluyendo administradores globales)
     const dbMemberships = await prisma.leagueMembership.findMany({
       where: {
         leagueId: userMembership.leagueId,
-        hasPaid: true,
         user: { role: { not: "ADMIN" } }
       },
-      include: { user: true },
+      include: {
+        user: true,
+        league: true,
+      },
     });
 
-    if (dbMemberships.length === 0) {
-      throw new Error("No members in database league");
-    }
+    const activeLeague = dbMemberships[0]?.league || null;
+    const transferAmount = activeLeague?.transferAmount || null;
 
     members = dbMemberships.map((m) => ({
       id: m.userId,
@@ -200,21 +72,39 @@ export default async function RankingPage() {
       differenceCount: m.differenceCount,
       tendencyCount: m.tendencyCount,
       consolationCount: m.consolationCount,
+      activePhase1: m.activePhase1,
+      activePhase2: m.activePhase2,
+      activePhase3: m.activePhase3,
     }));
 
-  } catch (error) {
-    console.warn("Fallo al obtener datos del ranking de la DB, usando mock data. Error:", error);
-    members = mockMembers;
-    isDemo = true;
-    
-    // Asignar el id del usuario de sesión actual al elemento actual en el mock
-    if (session?.user?.id) {
-      currentUserId = "m-user-current";
-      const currentMock = mockMembers.find((m) => m.id === "m-user-current");
-      if (currentMock && session.user.name) {
-        currentMock.name = session.user.name;
-      }
+    // 3. Determinar fase activa del torneo
+    const matches = await prisma.match.findMany({
+      select: { stage: true, status: true, homeScore: true },
+    });
+
+    const phase1Matches = matches.filter(m => m.stage === "GROUPS");
+    const phase1Finished = phase1Matches.length > 0 && phase1Matches.every(m => m.status === "FINISHED" || m.homeScore !== null);
+
+    const phase2Matches = matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16");
+    const phase2Finished = phase2Matches.length > 0 && phase2Matches.every(m => m.status === "FINISHED" || m.homeScore !== null);
+
+    let currentTournamentPhase: 1 | 2 | 3 = 1;
+    if (phase1Finished) {
+      currentTournamentPhase = phase2Finished ? 3 : 2;
     }
+
+    return (
+      <RankingView
+        members={members}
+        currentUserId={currentUserId}
+        isDemo={false}
+        transferAmount={transferAmount}
+        currentTournamentPhase={currentTournamentPhase}
+      />
+    );
+
+  } catch (error) {
+    console.error("Fallo al obtener datos del ranking de la DB:", error);
   }
 
   return (
@@ -222,6 +112,8 @@ export default async function RankingPage() {
       members={members}
       currentUserId={currentUserId}
       isDemo={isDemo}
+      transferAmount={null}
+      currentTournamentPhase={1}
     />
   );
 }

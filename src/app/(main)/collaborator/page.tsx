@@ -63,6 +63,17 @@ export default async function CollaboratorPage() {
     },
   });
 
+  // Obtener partidos para calcular finalización de fases
+  const matches = await prisma.match.findMany({
+    select: { stage: true, status: true, homeScore: true },
+  });
+
+  const phase1Finished = matches.filter(m => m.stage === "GROUPS").length > 0 && 
+    matches.filter(m => m.stage === "GROUPS").every(m => m.status === "FINISHED" || m.homeScore !== null);
+
+  const phase2Finished = matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16").length > 0 && 
+    matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16").every(m => m.status === "FINISHED" || m.homeScore !== null);
+
   const leagueName = membership?.league.name || "Mi Liga";
 
   return (
@@ -70,6 +81,8 @@ export default async function CollaboratorPage() {
       leagueId={activeLeagueId}
       leagueName={leagueName}
       initialMembers={memberships}
+      phase1Finished={phase1Finished}
+      phase2Finished={phase2Finished}
     />
   );
 }

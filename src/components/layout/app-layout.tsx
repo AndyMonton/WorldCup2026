@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
@@ -43,6 +43,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session, update } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -82,6 +83,20 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
       title,
       message,
       type,
+    });
+  };
+
+  const triggerConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setDialogConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm,
     });
   };
 
@@ -156,6 +171,23 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
 
 
   const handleSwitchLeague = async (leagueId: string) => {
+    if ((window as any).hasUnsavedPredictions) {
+      triggerConfirm(
+        "Cambios sin Guardar",
+        "Tenés pronósticos cargados sin guardar. Si cambiás de liga, perderás los cambios. ¿Querés continuar?",
+        async () => {
+          (window as any).hasUnsavedPredictions = false;
+          const res = await setActiveLeague(leagueId);
+          if (res.success) {
+            window.location.reload();
+          } else {
+            triggerAlert("Error al cambiar liga", res.error || "Ocurrió un error al cambiar de liga", "error");
+          }
+        }
+      );
+      return;
+    }
+
     const res = await setActiveLeague(leagueId);
     if (res.success) {
       window.location.reload();
@@ -249,6 +281,17 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   }
 
   const handleSignOut = () => {
+    if ((window as any).hasUnsavedPredictions) {
+      triggerConfirm(
+        "Cambios sin Guardar",
+        "Tenés pronósticos cargados sin guardar. Si cerrás sesión, perderás los cambios. ¿Querés continuar?",
+        () => {
+          (window as any).hasUnsavedPredictions = false;
+          signOut({ callbackUrl: "/login" });
+        }
+      );
+      return;
+    }
     signOut({ callbackUrl: "/login" });
   };
 
@@ -316,6 +359,19 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={(e) => {
+                  if ((window as any).hasUnsavedPredictions) {
+                    e.preventDefault();
+                    triggerConfirm(
+                      "Cambios sin Guardar",
+                      "Tenés pronósticos cargados sin guardar. Si salís de esta pantalla, perderás los cambios. ¿Querés salir de todas formas?",
+                      () => {
+                        (window as any).hasUnsavedPredictions = false;
+                        router.push(item.href);
+                      }
+                    );
+                  }
+                }}
                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all hover-scale ${
                   isActive
                     ? "btn-premium-nav font-bold"
@@ -464,7 +520,20 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    if ((window as any).hasUnsavedPredictions) {
+                      e.preventDefault();
+                      triggerConfirm(
+                        "Cambios sin Guardar",
+                        "Tenés pronósticos cargados sin guardar. Si salís de esta pantalla, perderás los cambios. ¿Querés salir de todas formas?",
+                        () => {
+                          (window as any).hasUnsavedPredictions = false;
+                          router.push(item.href);
+                        }
+                      );
+                    }
+                  }}
                   className={`flex items-center gap-4 px-4 py-3.5 text-base font-semibold rounded-xl transition-all ${
                     isActive
                       ? "btn-premium-nav"
@@ -557,6 +626,19 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={(e) => {
+                  if ((window as any).hasUnsavedPredictions) {
+                    e.preventDefault();
+                    triggerConfirm(
+                      "Cambios sin Guardar",
+                      "Tenés pronósticos cargados sin guardar. Si salís de esta pantalla, perderás los cambios. ¿Querés salir de todas formas?",
+                      () => {
+                        (window as any).hasUnsavedPredictions = false;
+                        router.push(item.href);
+                      }
+                    );
+                  }
+                }}
                 className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all text-xs font-semibold ${
                   isActive
                     ? "text-primary bg-primary/10"
@@ -757,6 +839,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
         title={dialogConfig.title}
         message={dialogConfig.message}
         type={dialogConfig.type}
+        onConfirm={dialogConfig.onConfirm}
       />
     </div>
   );

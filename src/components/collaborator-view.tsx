@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Search, CheckCircle2, XCircle, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
-import { updateUserPaymentStatus } from "@/app/actions/admin";
+import { Search, Loader2, ShieldCheck } from "lucide-react";
+import { updateUsersPhaseStatus } from "@/app/actions/admin";
 import { CustomDialog } from "@/components/ui/custom-dialog";
 
 interface MemberItem {
@@ -12,6 +12,9 @@ interface MemberItem {
   hasPaid: boolean;
   role: string;
   createdAt: Date;
+  activePhase1: boolean;
+  activePhase2: boolean;
+  activePhase3: boolean;
   user: {
     id: string;
     name: string | null;
@@ -23,12 +26,20 @@ interface CollaboratorViewProps {
   leagueId: string;
   leagueName: string;
   initialMembers: MemberItem[];
+  phase1Finished?: boolean;
+  phase2Finished?: boolean;
 }
 
-export function CollaboratorView({ leagueId, leagueName, initialMembers }: CollaboratorViewProps) {
+export function CollaboratorView({ 
+  leagueId, 
+  leagueName, 
+  initialMembers,
+  phase1Finished = false,
+  phase2Finished = false
+}: CollaboratorViewProps) {
   const [members, setMembers] = useState<MemberItem[]>(initialMembers);
   const [searchTerm, setSearchTerm] = useState("");
-  const [updatingPaymentMap, setUpdatingPaymentMap] = useState<Record<string, boolean>>({});
+  const [updatingPhaseMap, setUpdatingPhaseMap] = useState<Record<string, boolean>>({});
   const [isPending, startTransition] = useTransition();
 
   // Estado para diálogos/modales custom
@@ -58,24 +69,30 @@ export function CollaboratorView({ leagueId, leagueName, initialMembers }: Colla
     });
   };
 
-  const handleTogglePayment = (targetUserId: string, currentStatus: boolean) => {
-    setUpdatingPaymentMap((prev) => ({ ...prev, [targetUserId]: true }));
+  const handleTogglePhase = (targetUserId: string, phase: 1 | 2 | 3, currentStatus: boolean) => {
+    const targetKey = `${targetUserId}-${phase}`;
+    setUpdatingPhaseMap((prev) => ({ ...prev, [targetKey]: true }));
 
     startTransition(async () => {
-      const res = await updateUserPaymentStatus(targetUserId, leagueId, !currentStatus);
+      const res = await updateUsersPhaseStatus([targetUserId], leagueId, phase, !currentStatus);
       
-      setUpdatingPaymentMap((prev) => ({ ...prev, [targetUserId]: false }));
+      setUpdatingPhaseMap((prev) => ({ ...prev, [targetKey]: false }));
 
       if (res.success) {
         setMembers((prevMembers) =>
           prevMembers.map((member) =>
             member.userId === targetUserId
-              ? { ...member, hasPaid: !currentStatus }
+              ? {
+                  ...member,
+                  activePhase1: phase === 1 ? !currentStatus : member.activePhase1,
+                  activePhase2: phase === 2 ? !currentStatus : member.activePhase2,
+                  activePhase3: phase === 3 ? !currentStatus : member.activePhase3,
+                }
               : member
           )
         );
       } else {
-        triggerAlert("Error de Pago", res.error || "Ocurrió un error al procesar el pago", "error");
+        triggerAlert("Error de Fase", res.error || "Ocurrió un error al cambiar la fase", "error");
       }
     });
   };
@@ -126,15 +143,14 @@ export function CollaboratorView({ leagueId, leagueName, initialMembers }: Colla
               <tr className="border-b border-border bg-slate-900/40 text-slate-400 text-[10px] uppercase tracking-wider font-extrabold">
                 <th className="px-6 py-4">Usuario</th>
                 <th className="px-6 py-4">Sector</th>
-                <th className="px-6 py-4">Fecha Inscripción</th>
-                <th className="px-6 py-4 text-center">Estado de Pago</th>
+                <th className="px-6 py-4 text-center">Fase 1 (Habilitar)</th>
+                <th className="px-6 py-4 text-center">Fase 2 (Habilitar)</th>
+                <th className="px-6 py-4 text-center">Fase 3 (Habilitar)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60 text-slate-300 text-sm">
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => {
-                  const isUpdating = !!updatingPaymentMap[member.userId];
-                  
                   return (
                     <tr key={member.id} className="hover:bg-slate-900/20 transition-colors">
                       {/* Usuario */}
@@ -156,50 +172,44 @@ export function CollaboratorView({ leagueId, leagueName, initialMembers }: Colla
                         </span>
                       </td>
 
-                      {/* Fecha Inscripción */}
-                      <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(member.createdAt).toLocaleDateString("es-AR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      {/* Fase 1 Checkbox */}
+                      <td className="px-6 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={member.activePhase1}
+                          disabled={updatingPhaseMap[`${member.userId}-1`]}
+                          onChange={() => handleTogglePhase(member.userId, 1, member.activePhase1)}
+                          className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-50"
+                        />
                       </td>
 
-                      {/* Estado de Pago */}
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleTogglePayment(member.userId, member.hasPaid)}
-                          disabled={isUpdating}
-                          className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                            isUpdating
-                              ? "bg-slate-900 text-slate-400 border-border cursor-not-allowed"
-                              : member.hasPaid
-                              ? "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/30 hover:border-green-500/50 cursor-pointer"
-                              : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/30 hover:border-red-500/50 cursor-pointer"
-                          }`}
-                        >
-                          {isUpdating ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : member.hasPaid ? (
-                            <CheckCircle2 className="w-4 h-4 text-green-400" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-400" />
-                          )}
-                          {isUpdating
-                            ? "Actualizando..."
-                            : member.hasPaid
-                            ? "Confirmado"
-                            : "Pendiente"}
-                        </button>
+                      {/* Fase 2 Checkbox */}
+                      <td className="px-6 py-4 text-center" title={!phase1Finished ? "Se habilita al finalizar la Fase 1" : undefined}>
+                        <input
+                          type="checkbox"
+                          checked={member.activePhase2}
+                          disabled={!phase1Finished || updatingPhaseMap[`${member.userId}-2`]}
+                          onChange={() => handleTogglePhase(member.userId, 2, member.activePhase2)}
+                          className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        />
+                      </td>
+
+                      {/* Fase 3 Checkbox */}
+                      <td className="px-6 py-4 text-center" title={!phase2Finished ? "Se habilita al finalizar la Fase 2" : undefined}>
+                        <input
+                          type="checkbox"
+                          checked={member.activePhase3}
+                          disabled={!phase2Finished || updatingPhaseMap[`${member.userId}-3`]}
+                          onChange={() => handleTogglePhase(member.userId, 3, member.activePhase3)}
+                          className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        />
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-slate-500 font-semibold">
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500 font-semibold">
                     No se encontraron participantes en esta liga.
                   </td>
                 </tr>

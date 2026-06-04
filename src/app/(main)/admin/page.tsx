@@ -332,6 +332,12 @@ export default async function AdminPage() {
     isDemo = true;
   }
 
+  const phase1Matches = matches.filter(m => m.stage === MatchStage.GROUPS);
+  const phase1Finished = phase1Matches.length > 0 && phase1Matches.every(m => m.status === MatchStatus.FINISHED || m.homeScore !== null);
+
+  const phase2Matches = matches.filter(m => m.stage === MatchStage.ROUND_32 || m.stage === MatchStage.ROUND_16);
+  const phase2Finished = phase2Matches.length > 0 && phase2Matches.every(m => m.status === MatchStatus.FINISHED || m.homeScore !== null);
+
   return (
     <AdminView
       initialMatches={matches}
@@ -339,6 +345,8 @@ export default async function AdminPage() {
       users={users}
       auditLogs={auditLogs}
       isDemo={isDemo}
+      phase1Finished={phase1Finished}
+      phase2Finished={phase2Finished}
     />
   );
 }

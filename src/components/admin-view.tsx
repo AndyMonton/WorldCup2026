@@ -71,6 +71,8 @@ interface AdminViewProps {
   users: UserItem[];
   auditLogs: (AuditLog & { user: { name: string | null; email: string } })[];
   isDemo: boolean;
+  phase1Finished?: boolean;
+  phase2Finished?: boolean;
 }
  
 type AdminTab = "results" | "leagues" | "users" | "exports" | "sectors";
@@ -175,7 +177,15 @@ function LeagueTransferInfoCell({
   );
 }
  
-export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }: AdminViewProps) {
+export function AdminView({ 
+  initialMatches, 
+  leagues, 
+  users, 
+  auditLogs, 
+  isDemo,
+  phase1Finished = false,
+  phase2Finished = false
+}: AdminViewProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("results");
   const [matches, setMatches] = useState<MatchItem[]>(initialMatches);
   const [localLeagues, setLocalLeagues] = useState(leagues);
@@ -1436,29 +1446,33 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleBulkPhaseUpdate(2, true)}
-                  disabled={updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
-                  className="px-3 py-1.5 bg-primary/20 text-primary border border-primary/30 text-xs font-bold rounded-lg hover:bg-primary/30 transition-all disabled:opacity-50 cursor-pointer"
+                  disabled={!phase1Finished || updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
+                  title={!phase1Finished ? "Se habilita al finalizar la Fase 1" : undefined}
+                  className="px-3 py-1.5 bg-primary/20 text-primary border border-primary/30 text-xs font-bold rounded-lg hover:bg-primary/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Habilitar Fase 2
                 </button>
                 <button
                   onClick={() => handleBulkPhaseUpdate(2, false)}
-                  disabled={updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
-                  className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                  disabled={!phase1Finished || updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
+                  title={!phase1Finished ? "Se habilita al finalizar la Fase 1" : undefined}
+                  className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Deshabilitar Fase 2
                 </button>
                 <button
                   onClick={() => handleBulkPhaseUpdate(3, true)}
-                  disabled={updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
-                  className="px-3 py-1.5 bg-primary/20 text-primary border border-primary/30 text-xs font-bold rounded-lg hover:bg-primary/30 transition-all disabled:opacity-50 cursor-pointer"
+                  disabled={!phase2Finished || updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
+                  title={!phase2Finished ? "Se habilita al finalizar la Fase 2" : undefined}
+                  className="px-3 py-1.5 bg-primary/20 text-primary border border-primary/30 text-xs font-bold rounded-lg hover:bg-primary/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Habilitar Fase 3
                 </button>
                 <button
                   onClick={() => handleBulkPhaseUpdate(3, false)}
-                  disabled={updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
-                  className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                  disabled={!phase2Finished || updatingBulk || Object.values(selectedUserIds).filter(Boolean).length === 0}
+                  title={!phase2Finished ? "Se habilita al finalizar la Fase 2" : undefined}
+                  className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-bold rounded-lg hover:bg-red-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Deshabilitar Fase 3
                 </button>
@@ -1539,22 +1553,22 @@ export function AdminView({ initialMatches, leagues, users, auditLogs, isDemo }:
                               className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-50"
                             />
                           </td>
-                          <td className="py-3.5 px-3 text-center">
+                          <td className="py-3.5 px-3 text-center" title={!phase1Finished ? "Se habilita al finalizar la Fase 1" : undefined}>
                             <input
                               type="checkbox"
                               checked={m?.activePhase2 ?? false}
-                              disabled={updatingPhaseMap[`${u.id}-2`]}
+                              disabled={!phase1Finished || updatingPhaseMap[`${u.id}-2`]}
                               onChange={() => handleTogglePhase(u.id, 2, m?.activePhase2 ?? false)}
-                              className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-50"
+                              className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                             />
                           </td>
-                          <td className="py-3.5 px-3 text-center">
+                          <td className="py-3.5 px-3 text-center" title={!phase2Finished ? "Se habilita al finalizar la Fase 2" : undefined}>
                             <input
                               type="checkbox"
                               checked={m?.activePhase3 ?? false}
-                              disabled={updatingPhaseMap[`${u.id}-3`]}
+                              disabled={!phase2Finished || updatingPhaseMap[`${u.id}-3`]}
                               onChange={() => handleTogglePhase(u.id, 3, m?.activePhase3 ?? false)}
-                              className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-50"
+                              className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                             />
                           </td>
                           <td className="py-3.5 px-3 text-center">

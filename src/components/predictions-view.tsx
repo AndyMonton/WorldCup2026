@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect, useMemo } from "react";
 import { MatchStage, Team } from "@prisma/client";
 import { savePrediction, saveBonusPredictions } from "@/app/actions/predictions";
+import { CustomDialog } from "@/components/ui/custom-dialog";
 import {
   CalendarDays,
   Lock,
@@ -121,6 +122,92 @@ export function PredictionsView({
 
   const [, startSavingTransition] = useTransition();
 
+  // Dialog configuration state
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "warning" | "error" | "confirm";
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
+  const triggerConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void
+  ) => {
+    setDialogConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm,
+    });
+  };
+
+  const hasChanges = useMemo(() => {
+    // 1. Check match predictions
+    for (const m of matches) {
+      const isPhaseActive =
+        m.stage === "GROUPS" ? activePhase1 :
+        (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
+        activePhase3;
+      const blockTime = new Date(m.date.getTime() - 15 * 60 * 1000);
+      const isLocked = new Date() > blockTime || !isPhaseActive;
+      if (isLocked) continue;
+
+      const score = scores[m.id];
+      if (!score) continue;
+
+      const originalHome = m.userPrediction?.homeScore?.toString() ?? "";
+      const originalAway = m.userPrediction?.awayScore?.toString() ?? "";
+      const originalWinner = m.userPrediction?.predictedWinnerId ?? null;
+
+      if (score.home !== originalHome || score.away !== originalAway || predictedWinners[m.id] !== originalWinner) {
+        return true;
+      }
+    }
+
+    // 2. Check special bonus predictions
+    const originalChampion = bonusPrediction?.championId || "";
+    const originalRunnerUp = bonusPrediction?.runnerUpId || "";
+    const originalTopScorer = bonusPrediction?.topScorerName || "";
+
+    if (championId !== originalChampion || runnerUpId !== originalRunnerUp || topScorerName !== originalTopScorer) {
+      return true;
+    }
+
+    return false;
+  }, [scores, predictedWinners, matches, championId, runnerUpId, topScorerName, bonusPrediction, activePhase1, activePhase2, activePhase3]);
+
+  // Hook for beforeunload browser alerts
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "Tenés cambios sin guardar. ¿Estás seguro de que querés salir?";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasChanges]);
+
+  // Expose dirty flag to layout
+  useEffect(() => {
+    (window as any).hasUnsavedPredictions = hasChanges;
+    return () => {
+      (window as any).hasUnsavedPredictions = false;
+    };
+  }, [hasChanges]);
+
   // 2. Helper Mappings and functions
   const codeMapping: Record<string, string> = {
     ARG: "ar", BRA: "br", MEX: "mx", USA: "us", CAN: "ca", ESP: "es", FRA: "fr", GER: "de", ITA: "it", ENG: "gb-eng",
@@ -223,16 +310,8 @@ export function PredictionsView({
   };
 
   const handleSaveAll = () => {
-    // Determinar los partidos activos según la pestaña móvil actual
-    const activeMatches = matches.filter((m) => {
-      if (mobileActiveTab === "groups") {
-        return m.stage === "GROUPS" && (groupFilter === "TODOS" ? true : m.group === groupFilter);
-      } else {
-        return m.stage !== "GROUPS";
-      }
-    });
-
-    const matchesToSave = activeMatches.filter((m) => {
+    // 1. Determinar partidos con cambios
+    const matchesToSave = matches.filter((m) => {
       const isPhaseActive =
         m.stage === "GROUPS" ? activePhase1 :
         (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
@@ -255,9 +334,31 @@ export function PredictionsView({
       );
     });
 
-    if (matchesToSave.length === 0) {
+    // 2. Determinar especiales con cambios
+    const originalChampion = bonusPrediction?.championId || "";
+    const originalRunnerUp = bonusPrediction?.runnerUpId || "";
+    const originalTopScorer = bonusPrediction?.topScorerName || "";
+    const bonusChanged =
+      championId !== originalChampion ||
+      runnerUpId !== originalRunnerUp ||
+      topScorerName !== originalTopScorer;
+
+    const isBonusLocked = new Date() > new Date("2026-06-11T12:00:00Z");
+
+    if (matchesToSave.length === 0 && (!bonusChanged || isBonusLocked)) {
       setGlobalStatus({ type: "info", message: "No hay cambios pendientes o válidos por guardar." });
       return;
+    }
+
+    // Validar especiales
+    if (bonusChanged && !isBonusLocked) {
+      if (championId && runnerUpId && championId === runnerUpId) {
+        setGlobalStatus({
+          type: "error",
+          message: "El Campeón y el Subcampeón no pueden ser el mismo equipo.",
+        });
+        return;
+      }
     }
 
     // Validar playoffs
@@ -281,6 +382,7 @@ export function PredictionsView({
       let errorOccurred = false;
       let lastErrorMessage = "";
 
+      // Guardar partidos
       for (const m of matchesToSave) {
         const score = scores[m.id];
         const homeVal = parseInt(score.home);
@@ -288,7 +390,7 @@ export function PredictionsView({
         const predictedWinner = predictedWinners[m.id];
 
         if (isDemo) {
-          await new Promise((resolve) => setTimeout(resolve, 350));
+          await new Promise((resolve) => setTimeout(resolve, 150));
           setSavedSuccessMap((prev) => ({ ...prev, [m.id]: true }));
           successCount++;
         } else {
@@ -304,6 +406,25 @@ export function PredictionsView({
         }
       }
 
+      // Guardar especiales si cambiaron
+      if (bonusChanged && !isBonusLocked && !errorOccurred) {
+        if (isDemo) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          setSavedBonusSuccess(true);
+          successCount++;
+        } else {
+          const res = await saveBonusPredictions(championId, runnerUpId, topScorerName);
+          if (res.success) {
+            setSavedBonusSuccess(true);
+            successCount++;
+          } else {
+            setBonusError(res.error);
+            errorOccurred = true;
+            lastErrorMessage = res.error || "Error al guardar especiales.";
+          }
+        }
+      }
+
       setSavingBonus(false);
 
       if (successCount > 0 && !errorOccurred) {
@@ -315,6 +436,7 @@ export function PredictionsView({
   };
 
   const handleCancelChanges = () => {
+    // Restaurar partidos
     setScores(() => {
       const initial: Record<string, { home: string; away: string }> = {};
       matches.forEach((m) => {
@@ -337,6 +459,13 @@ export function PredictionsView({
       });
       return initial;
     });
+
+    // Restaurar especiales
+    setChampionId(bonusPrediction?.championId || "");
+    setRunnerUpId(bonusPrediction?.runnerUpId || "");
+    setTopScorerName(bonusPrediction?.topScorerName || "");
+    setSavedBonusSuccess(false);
+    setBonusError(null);
 
     setGlobalStatus({ type: "info", message: "Cambios cancelados." });
     setTimeout(() => setGlobalStatus({ type: null, message: null }), 3000);
@@ -990,7 +1119,7 @@ export function PredictionsView({
                                   <Lock className="w-3.5 h-3.5" /> Bloqueado
                                 </span>
                               ) : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 md:hidden">
                                   {error && <span className="text-[10px] text-red-400 max-w-[180px] text-right leading-tight whitespace-normal">{error}</span>}
 
                                   <button
@@ -1152,7 +1281,7 @@ export function PredictionsView({
                 <button
                   type="submit"
                   disabled={savingBonus}
-                  className="w-full py-3 btn-premium"
+                  className="w-full py-3 btn-premium md:hidden"
                 >
                   {savingBonus ? (
                     <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
@@ -1758,8 +1887,8 @@ export function PredictionsView({
         )}
 
         {/* 6. Alerta de Estado Global & Botón de Guardado Flotante Pegajoso al Pie (Solo en partidos) */}
-        {mobileActiveTab !== "bonus" && (
-          <div className="fixed bottom-[57px] md:bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-30 flex flex-col gap-2">
+        {(mobileActiveTab !== "bonus" || activeTab !== "bonus") && (
+          <div className="fixed bottom-[57px] md:bottom-0 left-0 md:left-64 right-0 p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-30 flex flex-col gap-2">
             {/* Mensaje de estado global */}
             {globalStatus.message && (
               <div className={`p-2.5 rounded-xl border text-center text-[10px] font-bold uppercase tracking-wider ${
@@ -1777,9 +1906,19 @@ export function PredictionsView({
             <div className="flex gap-3 w-full">
               <button
                 type="button"
-                onClick={handleCancelChanges}
-                disabled={savingBonus}
-                className="flex-1 bg-slate-900 hover:bg-slate-800 border border-border text-slate-300 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                onClick={() => {
+                  triggerConfirm(
+                    "Descartar cambios",
+                    "¿Estás seguro de que querés cancelar todos los cambios no guardados?",
+                    handleCancelChanges
+                  );
+                }}
+                disabled={savingBonus || !hasChanges}
+                className={`flex-1 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
+                  !hasChanges
+                    ? "bg-slate-900/40 text-slate-650 border border-border/40 cursor-not-allowed opacity-50"
+                    : "bg-slate-900 hover:bg-slate-800 border border-border text-slate-300 cursor-pointer active:scale-[0.98]"
+                }`}
               >
                 Cancelar
               </button>
@@ -1787,8 +1926,12 @@ export function PredictionsView({
               <button
                 type="button"
                 onClick={handleSaveAll}
-                disabled={savingBonus}
-                className="flex-1 bg-primary hover:bg-primary-hover text-primary-foreground font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                disabled={savingBonus || !hasChanges}
+                className={`flex-1 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
+                  !hasChanges
+                    ? "bg-primary/20 text-primary-foreground/30 cursor-not-allowed opacity-50"
+                    : "bg-primary hover:bg-primary-hover text-primary-foreground cursor-pointer active:scale-[0.98]"
+                }`}
               >
                 {savingBonus ? (
                   <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
@@ -1803,6 +1946,15 @@ export function PredictionsView({
           </div>
         )}
       </div>
+
+      <CustomDialog
+        isOpen={dialogConfig.isOpen}
+        onClose={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        type={dialogConfig.type}
+        onConfirm={dialogConfig.onConfirm}
+      />
     </>
   );
 }

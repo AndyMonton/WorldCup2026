@@ -16,31 +16,46 @@ interface RankingMember {
   differenceCount: number;
   tendencyCount: number;
   consolationCount: number;
+  activePhase1: boolean;
+  activePhase2: boolean;
+  activePhase3: boolean;
 }
 
 interface RankingViewProps {
   members: RankingMember[];
   currentUserId?: string;
   isDemo: boolean;
+  transferAmount: number | null;
+  currentTournamentPhase: 1 | 2 | 3;
 }
 
 type PhaseTab = "accumulated" | "phase1" | "phase2" | "phase3";
 
-export function RankingView({ members, currentUserId, isDemo }: RankingViewProps) {
+export function RankingView({
+  members,
+  currentUserId,
+  isDemo,
+  transferAmount,
+  currentTournamentPhase,
+}: RankingViewProps) {
   const [activePhase, setActivePhase] = useState<PhaseTab>("accumulated");
   const [selectedDept, setSelectedDept] = useState<string>("TODOS");
   const [selectedGroup, setSelectedGroup] = useState<string>("TODOS");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showHelp, setShowHelp] = useState(false);
+  const [filterType, setFilterType] = useState<"all" | "habilitados">("all");
 
   // Obtener sectores únicos para el filtro
   const departments = ["TODOS", ...Array.from(new Set(members.map((m) => m.department)))];
 
-  // Obtener grupos internos únicos para el filtro
-  const internalGroups = [
-    "TODOS",
-    ...Array.from(new Set(members.map((m) => m.internalGroup).filter((g): g is string => !!g))),
-  ];
+  // Calcular pozo acumulado para la fase activa del torneo
+  const paidCount = members.filter((m) => {
+    if (currentTournamentPhase === 1) return m.activePhase1;
+    if (currentTournamentPhase === 2) return m.activePhase2;
+    return m.activePhase3;
+  }).length;
+
+  const totalPot = transferAmount ? paidCount * transferAmount : 0;
 
   // Mapear los puntos del miembro según la fase seleccionada
   const getMemberPhasePoints = (m: RankingMember) => {
@@ -67,6 +82,12 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
       // Búsqueda nombre
       if (searchTerm.trim() !== "") {
         if (!m.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      }
+      // Filtro Habilitados
+      if (filterType === "habilitados") {
+        if (currentTournamentPhase === 1) return m.activePhase1;
+        if (currentTournamentPhase === 2) return m.activePhase2;
+        if (currentTournamentPhase === 3) return m.activePhase3;
       }
       return true;
     })
@@ -136,6 +157,34 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
           Criterios de Desempate
         </button>
       </div>
+
+      {/* Pozo Acumulado Card */}
+      {transferAmount !== null && (
+        <div className="glass-panel border-2 border-primary/30 rounded-2xl p-5 bg-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg relative overflow-hidden">
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="flex items-center gap-3.5 z-10 w-full sm:w-auto text-left">
+            <div className="p-3 bg-primary/10 text-primary rounded-xl">
+              <Trophy className="w-6 h-6 text-gold animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                Pozo Acumulado (Fase {currentTournamentPhase})
+              </h3>
+              <p className="text-2xl font-black text-gradient mt-0.5">
+                {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(totalPot)}
+              </p>
+            </div>
+          </div>
+          <div className="text-left sm:text-right z-10 w-full sm:w-auto border-t sm:border-t-0 border-border/40 pt-3 sm:pt-0">
+            <span className="text-[10px] text-slate-400 font-semibold block uppercase">
+              Participantes Habilitados
+            </span>
+            <span className="text-lg font-extrabold text-foreground">
+              {paidCount} <span className="text-xs font-semibold text-slate-400">/ {members.length}</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Explicación de desempates modal/collapse */}
       {showHelp && (
@@ -237,8 +286,29 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
           </div>
         </div>
 
-        {/* Espaciador invisible para mantener el grid centrado en PC */}
-        <div className="hidden md:block justify-self-end w-full"></div>
+        {/* Filtro Todos vs Habilitados */}
+        <div className="flex bg-slate-950/80 border border-border p-1 rounded-xl justify-self-end w-full md:w-auto">
+          <button
+            onClick={() => setFilterType("all")}
+            className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              filterType === "all"
+                ? "bg-primary text-primary-foreground shadow"
+                : "text-slate-400 hover:text-foreground"
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            onClick={() => setFilterType("habilitados")}
+            className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              filterType === "habilitados"
+                ? "bg-primary text-primary-foreground shadow"
+                : "text-slate-400 hover:text-foreground"
+            }`}
+          >
+            Habilitados
+          </button>
+        </div>
       </div>
 
       {/* --- EL PODIO DE LA FASE ACTIVA --- */}
@@ -252,6 +322,24 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
               </div>
               <Award className="w-10 h-10 text-slate-400" />
               <h4 className="font-bold text-sm truncate max-w-full text-foreground">{podium[1].name}</h4>
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const isHabilitado = currentTournamentPhase === 1 
+                    ? podium[1].activePhase1 
+                    : currentTournamentPhase === 2 
+                    ? podium[1].activePhase2 
+                    : podium[1].activePhase3;
+                  return isHabilitado ? (
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
+                      Habilitado
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
+                      Pendiente
+                    </span>
+                  );
+                })()}
+              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">{podium[1].department}</p>
               <div className="text-lg font-extrabold text-foreground">
                 {podium[1].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -267,6 +355,24 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
               </div>
               <img src="/images/fifa-logo.jpg" alt="Copa FIFA" className="w-14 h-14 object-contain animate-bounce drop-shadow-md rounded-xl" />
               <h4 className="font-extrabold text-base truncate max-w-full text-gradient">{podium[0].name}</h4>
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const isHabilitado = currentTournamentPhase === 1 
+                    ? podium[0].activePhase1 
+                    : currentTournamentPhase === 2 
+                    ? podium[0].activePhase2 
+                    : podium[0].activePhase3;
+                  return isHabilitado ? (
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
+                      Habilitado
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
+                      Pendiente
+                    </span>
+                  );
+                })()}
+              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{podium[0].department}</p>
               <div className="text-2xl font-extrabold text-gold">
                 {podium[0].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -282,6 +388,24 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
               </div>
               <Award className="w-9 h-9 text-amber-700" />
               <h4 className="font-bold text-sm truncate max-w-full text-foreground">{podium[2].name}</h4>
+              <div className="flex items-center gap-1.5">
+                {(() => {
+                  const isHabilitado = currentTournamentPhase === 1 
+                    ? podium[2].activePhase1 
+                    : currentTournamentPhase === 2 
+                    ? podium[2].activePhase2 
+                    : podium[2].activePhase3;
+                  return isHabilitado ? (
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
+                      Habilitado
+                    </span>
+                  ) : (
+                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
+                      Pendiente
+                    </span>
+                  );
+                })()}
+              </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">{podium[2].department}</p>
               <div className="text-lg font-extrabold text-foreground">
                 {podium[2].displayPoints} <span className="text-xs font-semibold text-slate-400">pts</span>
@@ -345,13 +469,31 @@ export function RankingView({ members, currentUserId, isDemo }: RankingViewProps
                           alt="Avatar" 
                           className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0" 
                         />
-                        <div className="flex items-center gap-1.5">
-                          <span className="truncate max-w-[150px] sm:max-w-none">{member.name}</span>
-                          {isCurrentUser && (
-                            <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase">
-                              Vos
-                            </span>
-                          )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="truncate max-w-[120px] sm:max-w-none">{member.name}</span>
+                          <div className="flex gap-1 items-center shrink-0">
+                            {isCurrentUser && (
+                              <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase">
+                                Vos
+                              </span>
+                            )}
+                            {(() => {
+                              const isHabilitado = currentTournamentPhase === 1 
+                                ? member.activePhase1 
+                                : currentTournamentPhase === 2 
+                                ? member.activePhase2 
+                                : member.activePhase3;
+                              return isHabilitado ? (
+                                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-500/30">
+                                  Habilitado
+                                </span>
+                              ) : (
+                                <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
+                                  Pendiente
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
                     </td>

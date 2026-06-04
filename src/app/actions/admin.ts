@@ -515,8 +515,30 @@ export async function updateUsersPhaseStatus(
 ) {
   try {
     const session = await auth();
-    if (!session || session.user?.role !== "ADMIN") {
-      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
+    if (!session || !session.user) {
+      return { success: false, error: "Acceso denegado. Se requiere iniciar sesión." };
+    }
+
+    // Permitir si es ADMIN global
+    let isAllowed = session.user?.role === "ADMIN";
+
+    // Si no es ADMIN global, verificar si es COLLABORATOR de la liga
+    if (!isAllowed) {
+      const callerMembership = await prisma.leagueMembership.findUnique({
+        where: {
+          userId_leagueId: {
+            userId: session.user.id,
+            leagueId,
+          },
+        },
+      });
+      if (callerMembership && callerMembership.role === "COLLABORATOR") {
+        isAllowed = true;
+      }
+    }
+
+    if (!isAllowed) {
+      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador o colaborador para esta liga." };
     }
 
     if (userIds.length === 0) {
