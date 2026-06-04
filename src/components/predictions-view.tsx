@@ -1885,10 +1885,24 @@ export function PredictionsView({
             </form>
           </div>
         )}
+      </div>
 
-        {/* 6. Alerta de Estado Global & Botón de Guardado Flotante Pegajoso al Pie (Solo en partidos) */}
-        {(mobileActiveTab !== "bonus" || activeTab !== "bonus") && (
-          <div className="fixed bottom-[57px] md:bottom-0 left-0 md:left-64 right-0 p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-30 flex flex-col gap-2">
+      {/* 6. Alerta de Estado Global & Botón de Guardado Flotante Pegajoso al Pie (Solo en partidos) */}
+      {(() => {
+        const showOnDesktop = activeTab !== "bonus";
+        const showOnMobile = mobileActiveTab !== "bonus";
+
+        if (!showOnDesktop && !showOnMobile) return null;
+
+        const displayClass = 
+          showOnDesktop && showOnMobile 
+            ? "flex" 
+            : showOnDesktop 
+            ? "hidden md:flex" 
+            : "flex md:hidden";
+
+        return (
+          <div className={`fixed bottom-[57px] md:bottom-0 left-0 md:left-64 right-0 p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-30 flex-col gap-2 ${displayClass}`}>
             {/* Mensaje de estado global */}
             {globalStatus.message && (
               <div className={`p-2.5 rounded-xl border text-center text-[10px] font-bold uppercase tracking-wider ${
@@ -1916,7 +1930,7 @@ export function PredictionsView({
                 disabled={savingBonus || !hasChanges}
                 className={`flex-1 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
                   !hasChanges
-                    ? "bg-slate-900/40 text-slate-650 border border-border/40 cursor-not-allowed opacity-50"
+                    ? "bg-slate-900/40 text-slate-400/30 border border-border/40 cursor-not-allowed opacity-50"
                     : "bg-slate-900 hover:bg-slate-800 border border-border text-slate-300 cursor-pointer active:scale-[0.98]"
                 }`}
               >
@@ -1944,8 +1958,8 @@ export function PredictionsView({
               </button>
             </div>
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       <CustomDialog
         isOpen={dialogConfig.isOpen}

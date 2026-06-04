@@ -62,6 +62,7 @@ export default async function RankingPage() {
     members = dbMemberships.map((m) => ({
       id: m.userId,
       name: m.user.name || m.user.email,
+      image: m.user.image,
       department: m.department,
       internalGroup: m.internalGroup,
       points: m.points,

@@ -6,6 +6,7 @@ import { Trophy, Award, Building2, Users, Search, HelpCircle } from "lucide-reac
 interface RankingMember {
   id: string;
   name: string;
+  image: string | null;
   department: string;
   internalGroup: string | null;
   points: number;
@@ -312,7 +313,7 @@ export function RankingView({
       </div>
 
       {/* --- EL PODIO DE LA FASE ACTIVA --- */}
-      {podium.length > 0 && searchTerm === "" && (
+      {podium.length > 0 && podium[0].displayPoints > 0 && searchTerm === "" && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 items-end">
           {/* Segundo Puesto */}
           {podium[1] && (
@@ -334,8 +335,8 @@ export function RankingView({
                       Habilitado
                     </span>
                   ) : (
-                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
-                      Pendiente
+                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
+                      No Habilitado
                     </span>
                   );
                 })()}
@@ -354,7 +355,9 @@ export function RankingView({
                 1
               </div>
               <img src="/images/fifa-logo.jpg" alt="Copa FIFA" className="w-14 h-14 object-contain animate-bounce drop-shadow-md rounded-xl" />
-              <h4 className="font-extrabold text-base truncate max-w-full text-gradient">{podium[0].name}</h4>
+              <h4 className="font-extrabold text-base truncate max-w-full">
+                <span className="text-gradient inline-block">{podium[0].name}</span>
+              </h4>
               <div className="flex items-center gap-1.5">
                 {(() => {
                   const isHabilitado = currentTournamentPhase === 1 
@@ -367,8 +370,8 @@ export function RankingView({
                       Habilitado
                     </span>
                   ) : (
-                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
-                      Pendiente
+                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
+                      No Habilitado
                     </span>
                   );
                 })()}
@@ -400,8 +403,8 @@ export function RankingView({
                       Habilitado
                     </span>
                   ) : (
-                    <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
-                      Pendiente
+                    <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
+                      No Habilitado
                     </span>
                   );
                 })()}
@@ -464,11 +467,19 @@ export function RankingView({
                     {/* Nombre Jugador */}
                     <td className="py-4 px-4">
                       <div className="font-semibold text-foreground flex items-center gap-3">
-                        <img 
-                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`} 
-                          alt="Avatar" 
-                          className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0" 
-                        />
+                        {member.image ? (
+                          <img 
+                            src={member.image} 
+                            alt="Avatar" 
+                            className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0 object-cover" 
+                          />
+                        ) : (
+                          <img 
+                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`} 
+                            alt="Avatar" 
+                            className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0" 
+                          />
+                        )}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="truncate max-w-[120px] sm:max-w-none">{member.name}</span>
                           <div className="flex gap-1 items-center shrink-0">
@@ -488,8 +499,8 @@ export function RankingView({
                                   Habilitado
                                 </span>
                               ) : (
-                                <span className="text-[9px] bg-slate-500/20 text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase border border-slate-500/20">
-                                  Pendiente
+                                <span className="text-[9px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-bold uppercase border border-red-500/20">
+                                  No Habilitado
                                 </span>
                               );
                             })()}
