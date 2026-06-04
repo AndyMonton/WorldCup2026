@@ -228,6 +228,34 @@ html:not(.dark) .btn-premium-secondary:hover:not(:disabled) {
   box-shadow: 0 2px 8px 0 rgba(251, 191, 36, 0.3) !important;
 }
 
+/* Botón rojo premium con degradado y glow para acciones destructivas/errores */
+.btn-premium-red {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important; /* Rojo/Rose premium */
+  color: #ffffff !important;
+  border-radius: 9999px !important; /* rounded-full */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.2s ease-in-out !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-premium-red:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  box-shadow: 0 6px 20px 0 rgba(239, 68, 68, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-premium-red:active:not(:disabled) {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 8px 0 rgba(239, 68, 68, 0.3) !important;
+}
+
 /* Item de navegación activo con degradado verde premium */
 .btn-premium-nav {
   background: linear-gradient(135deg, #22c55e 0%, #15803d 100%) !important;

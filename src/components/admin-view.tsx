@@ -113,7 +113,7 @@ function LeagueTransferInfoCell({
         setTimeout(() => setSuccess(false), 2000);
       } else {
         if (onError) onError(res.error || "Ocurrió un error al guardar");
-        else alert(res.error || "Ocurrió un error al guardar");
+        else console.error(res.error || "Ocurrió un error al guardar");
       }
     });
   };

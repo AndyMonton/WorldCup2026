@@ -89,13 +89,9 @@ export function CustomDialog({
               onClose();
             }}
             className={`py-3 text-sm font-semibold rounded-full cursor-pointer transition-all ${
-              isConfirmation 
-                ? "flex-1 btn-premium" 
-                : "w-full btn-premium"
-            } ${
-              type === "error" 
-                ? "bg-gradient-to-r from-red-600 to-red-800 shadow-red-900/30" 
-                : ""
+              type === "error" || confirmText === "Eliminar"
+                ? (isConfirmation ? "flex-1 btn-premium-red" : "w-full btn-premium-red")
+                : (isConfirmation ? "flex-1 btn-premium" : "w-full btn-premium")
             }`}
           >
             {confirmText}
