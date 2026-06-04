@@ -195,9 +195,11 @@ const mockMatches = [
 
 export default async function AdminPage() {
   const session = await auth();
+  console.log("[AdminPage Server] Loaded! Session user:", session?.user);
 
   // Forzar protección a nivel de servidor (por seguridad extra, además del middleware)
   if (!session || session.user?.role !== "ADMIN") {
+    console.log("[AdminPage Server] Redirecting to /dashboard because user is not ADMIN. Role:", session?.user?.role);
     redirect("/dashboard");
   }
 
