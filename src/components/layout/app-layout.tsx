@@ -171,30 +171,22 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
   const activeLeague = memberships.find((m) => m.isActive);
 
 
-  const handleSwitchLeague = async (leagueId: string) => {
+  const handleSwitchLeague = (leagueId: string) => {
     if ((window as any).hasUnsavedPredictions) {
       triggerConfirm(
         "Cambios sin Guardar",
         "Tenés pronósticos cargados sin guardar. Si cambiás de liga, perderás los cambios. ¿Querés continuar?",
-        async () => {
+        () => {
           (window as any).hasUnsavedPredictions = false;
-          const res = await setActiveLeague(leagueId);
-          if (res.success) {
-            window.location.reload();
-          } else {
-            triggerAlert("Error al cambiar liga", res.error || "Ocurrió un error al cambiar de liga", "error");
-          }
+          document.cookie = `active_league_id=${leagueId}; path=/; max-age=31536000`;
+          window.location.reload();
         }
       );
       return;
     }
 
-    const res = await setActiveLeague(leagueId);
-    if (res.success) {
-      window.location.reload();
-    } else {
-      triggerAlert("Error al cambiar liga", res.error || "Ocurrió un error al cambiar de liga", "error");
-    }
+    document.cookie = `active_league_id=${leagueId}; path=/; max-age=31536000`;
+    window.location.reload();
   };
 
   const handleJoinLeagueSubmit = async (e: React.FormEvent) => {
