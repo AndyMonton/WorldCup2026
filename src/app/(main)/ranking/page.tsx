@@ -23,31 +23,41 @@ export default async function RankingPage() {
     const activeLeagueId = cookieStore.get("active_league_id")?.value;
     const isAdmin = session?.user?.role === "ADMIN";
 
-    let userMembership = null;
-    if (activeLeagueId) {
-      userMembership = await prisma.leagueMembership.findUnique({
-        where: {
-          userId_leagueId: {
-            userId,
-            leagueId: activeLeagueId,
-          },
-        },
-      });
-    }
-
-    if (!userMembership) {
-      userMembership = await prisma.leagueMembership.findFirst({
-        where: { userId },
-      });
-    }
-
     let targetLeagueId = activeLeagueId;
-    if (userMembership) {
-      targetLeagueId = userMembership.leagueId;
-    } else if (isAdmin) {
+
+    if (isAdmin) {
       if (!targetLeagueId) {
-        const firstLeague = await prisma.league.findFirst();
-        targetLeagueId = firstLeague?.id;
+        const adminMembership = await prisma.leagueMembership.findFirst({
+          where: { userId },
+        });
+        if (adminMembership) {
+          targetLeagueId = adminMembership.leagueId;
+        } else {
+          const firstLeague = await prisma.league.findFirst();
+          targetLeagueId = firstLeague?.id;
+        }
+      }
+    } else {
+      let userMembership = null;
+      if (activeLeagueId) {
+        userMembership = await prisma.leagueMembership.findUnique({
+          where: {
+            userId_leagueId: {
+              userId,
+              leagueId: activeLeagueId,
+            },
+          },
+        });
+      }
+
+      if (!userMembership) {
+        userMembership = await prisma.leagueMembership.findFirst({
+          where: { userId },
+        });
+      }
+
+      if (userMembership) {
+        targetLeagueId = userMembership.leagueId;
       }
     }
 
