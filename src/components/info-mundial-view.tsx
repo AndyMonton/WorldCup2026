@@ -581,7 +581,7 @@ export function InfoMundialView() {
 
       {/* --- PESTAÑA: CURIOSIDADES --- */}
       {activeTab === "trivia" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Tarjeta 1: Debutantes de 2026 */}
           <div className="glass-panel border border-border rounded-2xl overflow-hidden flex flex-col bg-slate-950/20 shadow-xl">
             <div className="relative h-48 w-full">
@@ -664,6 +664,157 @@ export function InfoMundialView() {
               <p className="text-xs text-slate-400 leading-relaxed">
                 Otras selecciones como Islandia y Panamá consiguieron su primera y única clasificación en Rusia 2018, emocionando a todo el mundo del fútbol con su espíritu deportivo.
               </p>
+            </div>
+          </div>
+
+          {/* Tarjeta 3: Goleadores Históricos */}
+          <div className="glass-panel border border-border rounded-2xl overflow-hidden flex flex-col bg-slate-950/20 shadow-xl">
+            <div className="relative h-48 w-full">
+              <img
+                src="/images/news_trophy.png"
+                alt="Trofeo de la Copa del Mundo"
+                className="w-full h-full object-cover border-b border-border/30"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end p-5">
+                <div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
+                    Leyendas
+                  </span>
+                  <h3 className="font-extrabold text-lg text-white mt-1">
+                    Goleadores Históricos de los Mundiales
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 flex-1 space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                El gol es la esencia del fútbol, y un grupo selecto de artilleros ha dejado una huella imborrable al liderar la tabla histórica de anotadores en la máxima cita mundialista.
+              </p>
+              <div className="space-y-2">
+                {[
+                  { name: "Miroslav Klose", country: "Alemania", goals: 16, matches: 24, status: "1°" },
+                  { name: "Ronaldo Nazário", country: "Brasil", goals: 15, matches: 19, status: "2°" },
+                  { name: "Gerd Müller", country: "Alemania", goals: 14, matches: 13, status: "3°" },
+                  { name: "Just Fontaine", country: "Francia", goals: 13, matches: 6, status: "4°" },
+                  { name: "Lionel Messi", country: "Argentina", goals: 13, matches: 26, status: "4°" },
+                  { name: "Pelé", country: "Brasil", goals: 12, matches: 14, status: "6°" },
+                ].map((player, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-2 bg-slate-900/30 border border-border/30 rounded-lg text-xs">
+                    <span className="font-semibold text-slate-200">
+                      <span className="text-primary mr-1.5">{player.status}</span>
+                      {player.name} <span className="text-[10px] text-slate-400 font-normal">({player.country})</span>
+                    </span>
+                    <span className="font-bold text-primary font-mono">{player.goals} goles <span className="text-[10px] text-slate-500 font-normal">({player.matches} PJ)</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta 4: Arqueros Récord */}
+          <div className="glass-panel border border-border rounded-2xl overflow-hidden flex flex-col bg-slate-950/20 shadow-xl">
+            <div className="relative h-48 w-full">
+              <img
+                src="/images/countdown_ref.png"
+                alt="Arquero y Valla Invicta"
+                className="w-full h-full object-cover border-b border-border/30"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end p-5">
+                <div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
+                    Defensa de Acero
+                  </span>
+                  <h3 className="font-extrabold text-lg text-white mt-1">
+                    Murallas del Arco en los Mundiales
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 flex-1 space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Mantener el arco en cero en una Copa del Mundo es una tarea titánica. Estos son los guardametas que rompieron todos los récords de invulnerabilidad:
+              </p>
+              
+              <div className="space-y-2.5">
+                <div className="p-3 bg-slate-900/40 border border-border/40 rounded-xl space-y-1">
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Menos goles recibidos (Mundial completo)</span>
+                  <span className="font-bold text-xs text-slate-200">Pascal Zuberbühler (Suiza)</span>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Logró mantener su arco invicto con <strong>0 goles recibidos</strong> en 4 partidos en Alemania 2006. Suiza quedó eliminada en octavos de final por penales (sin encajar goles en el tiempo reglamentario ni prórroga).
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 border border-border/40 rounded-xl space-y-1">
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Menos goles encajados siendo campeón</span>
+                  <p className="text-[11px] text-slate-400 leading-normal">
+                    <strong>Fabien Barthez</strong> (Francia, 1998), <strong>Gianluigi Buffon</strong> (Italia, 2006) e <strong>Iker Casillas</strong> (España, 2010) comparten el récord con solo <strong>2 goles recibidos</strong> en su camino al título.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 border border-border/40 rounded-xl space-y-1">
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Récords Adicionales</span>
+                  <ul className="text-[10.5px] text-slate-400 space-y-1 list-disc pl-3">
+                    <li><strong>Walter Zenga (Italia)</strong>: Récord de imbatibilidad consecutiva con <strong>517 minutos</strong> en Italia 1990.</li>
+                    <li><strong>Fabien Barthez (Francia) y Peter Shilton (Inglaterra)</strong>: Más partidos totales con la valla invicta (<strong>10 vallas invictas</strong> cada uno).</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta 5: Curiosidades y Hitos */}
+          <div className="glass-panel border border-border rounded-2xl overflow-hidden flex flex-col bg-slate-950/20 shadow-xl">
+            <div className="relative h-48 w-full">
+              <img
+                src="/images/stadium_banner.png"
+                alt="Hitos del fútbol"
+                className="w-full h-full object-cover border-b border-border/30"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex items-end p-5">
+                <div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
+                    Curiosidades
+                  </span>
+                  <h3 className="font-extrabold text-lg text-white mt-1">
+                    Datos Curiosos y Hitos Legendarios
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div className="p-5 flex-1 space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                La historia de los mundiales está llena de momentos insólitos, marcas asombrosas y récords que parecen casi imposibles de superar en el fútbol moderno:
+              </p>
+              
+              <div className="grid grid-cols-1 gap-3 text-xs">
+                <div className="p-2.5 bg-slate-900/30 border border-border/30 rounded-lg">
+                  <span className="font-bold text-foreground">⏱️ El gol más rápido de la historia</span>
+                  <p className="text-slate-400 mt-1">
+                    El turco <strong>Hakan Şükür</strong> tardó solo <strong>11 segundos</strong> en anotarle a Corea del Sur en el partido por el tercer puesto del Mundial 2002.
+                  </p>
+                </div>
+                
+                <div className="p-2.5 bg-slate-900/30 border border-border/30 rounded-lg">
+                  <span className="font-bold text-foreground">⚽ Mayor cantidad de goles en un partido</span>
+                  <p className="text-slate-450 mt-1">
+                    El ruso <strong>Oleg Salenko</strong> anotó <strong>5 goles</strong> en la victoria por 6-1 de Rusia sobre Camerún en el Mundial de EE.UU. 1994.
+                  </p>
+                </div>
+
+                <div className="p-2.5 bg-slate-900/30 border border-border/30 rounded-lg">
+                  <span className="font-bold text-foreground">🔥 Récord goleador en un solo torneo</span>
+                  <p className="text-slate-400 mt-1">
+                    El francés <strong>Just Fontaine</strong> convirtió la increíble cifra de <strong>13 goles</strong> en solo 6 partidos disputados en Suecia 1958.
+                  </p>
+                </div>
+
+                <div className="p-2.5 bg-slate-900/30 border border-border/30 rounded-lg">
+                  <span className="font-bold text-foreground">👴 El jugador más longevo</span>
+                  <p className="text-slate-400 mt-1">
+                    El portero egipcio <strong>Essam El-Hadary</strong> disputó el Mundial de Rusia 2018 con <strong>45 años y 161 días</strong>, atajando incluso un penal en la fase de grupos.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
