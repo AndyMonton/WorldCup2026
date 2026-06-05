@@ -16,20 +16,25 @@ export default async function CollaboratorPage() {
   const cookieStore = await cookies();
   let activeLeagueId = cookieStore.get("active_league_id")?.value;
 
+  // Verificar si es administrador global o si es colaborador/admin/owner de la liga activa
+  const isGlobalAdmin = session.user.role === "ADMIN";
+
   if (!activeLeagueId) {
-    // Buscar la primera membresía del usuario como fallback
-    const fallbackMembership = await prisma.leagueMembership.findFirst({
-      where: { userId },
-    });
-    activeLeagueId = fallbackMembership?.leagueId;
+    if (isGlobalAdmin) {
+      const firstLeague = await prisma.league.findFirst();
+      activeLeagueId = firstLeague?.id;
+    } else {
+      // Buscar la primera membresía del usuario como fallback
+      const fallbackMembership = await prisma.leagueMembership.findFirst({
+        where: { userId },
+      });
+      activeLeagueId = fallbackMembership?.leagueId;
+    }
   }
 
   if (!activeLeagueId) {
     redirect("/dashboard");
   }
-
-  // Verificar si es administrador global o si es colaborador/admin/owner de la liga activa
-  const isGlobalAdmin = session.user.role === "ADMIN";
 
   const membership = await prisma.leagueMembership.findUnique({
     where: {
@@ -90,7 +95,15 @@ export default async function CollaboratorPage() {
   const phase2Finished = matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16").length > 0 && 
     matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16").every(m => m.status === "FINISHED" || m.homeScore !== null);
 
-  const leagueName = membership?.league.name || "Mi Liga";
+  let leagueName = "Mi Liga";
+  if (membership) {
+    leagueName = membership.league.name;
+  } else if (isGlobalAdmin) {
+    const league = await prisma.league.findUnique({
+      where: { id: activeLeagueId },
+    });
+    leagueName = league?.name || "Mi Liga";
+  }
 
   return (
     <CollaboratorView

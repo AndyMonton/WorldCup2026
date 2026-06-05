@@ -26,30 +26,56 @@ export default async function MainLayout({
     include: { league: true },
   });
 
-  if (memberships.length === 0) {
-    // Si el usuario no tiene membresía (ej. admin puro), lo dejamos pasar con lista vacía
-    return <AppLayout memberships={[]}>{children}</AppLayout>;
-  }
+  const isAdmin = session.user.role === "ADMIN";
+  let formattedMemberships = [];
 
-  // Encontrar la membresía de la liga activa en la sesión
-  let activeMembership = memberships.find((m) => m.leagueId === activeLeagueId);
-  if (!activeMembership) {
-    activeMembership = memberships[0];
-  }
+  if (isAdmin) {
+    const allLeagues = await prisma.league.findMany();
+    
+    if (allLeagues.length === 0) {
+      return <AppLayout memberships={[]}>{children}</AppLayout>;
+    }
 
-  // Si tiene membresía pero el sector está pendiente, le obligamos a seleccionarlo primero
-  if (activeMembership && activeMembership.department === "PENDIENTE") {
-    redirect("/select-sector");
-  }
+    let selectedActiveLeagueId = activeLeagueId;
+    if (!selectedActiveLeagueId || !allLeagues.some((l) => l.id === selectedActiveLeagueId)) {
+      selectedActiveLeagueId = allLeagues[0].id;
+    }
 
-  // Formatear ligas para pasarlas al layout
-  const formattedMemberships = memberships.map((m) => ({
-    leagueId: m.leagueId,
-    leagueName: m.league.name,
-    isActive: m.leagueId === activeMembership.leagueId,
-    department: m.department,
-    role: m.role,
-  }));
+    formattedMemberships = allLeagues.map((l) => {
+      const userMembership = memberships.find((m) => m.leagueId === l.id);
+      return {
+        leagueId: l.id,
+        leagueName: l.name,
+        isActive: l.id === selectedActiveLeagueId,
+        department: userMembership?.department || "Administración",
+        role: userMembership?.role || "ADMIN",
+      };
+    });
+  } else {
+    if (memberships.length === 0) {
+      return <AppLayout memberships={[]}>{children}</AppLayout>;
+    }
+
+    // Encontrar la membresía de la liga activa en la sesión
+    let activeMembership = memberships.find((m) => m.leagueId === activeLeagueId);
+    if (!activeMembership) {
+      activeMembership = memberships[0];
+    }
+
+    // Si tiene membresía pero el sector está pendiente, le obligamos a seleccionarlo primero
+    if (activeMembership && activeMembership.department === "PENDIENTE") {
+      redirect("/select-sector");
+    }
+
+    // Formatear ligas para pasarlas al layout
+    formattedMemberships = memberships.map((m) => ({
+      leagueId: m.leagueId,
+      leagueName: m.league.name,
+      isActive: m.leagueId === activeMembership.leagueId,
+      department: m.department,
+      role: m.role,
+    }));
+  }
 
   return <AppLayout memberships={formattedMemberships}>{children}</AppLayout>;
 }

@@ -73,18 +73,22 @@ export async function setActiveLeague(leagueId: string) {
       return { success: false, error: "Debés iniciar sesión." };
     }
 
-    // Verificar que pertenezca a la liga
-    const membership = await prisma.leagueMembership.findUnique({
-      where: {
-        userId_leagueId: {
-          userId,
-          leagueId,
-        },
-      },
-    });
+    const isAdmin = session?.user?.role === "ADMIN";
 
-    if (!membership) {
-      return { success: false, error: "No pertenecés a esta liga." };
+    if (!isAdmin) {
+      // Verificar que pertenezca a la liga
+      const membership = await prisma.leagueMembership.findUnique({
+        where: {
+          userId_leagueId: {
+            userId,
+            leagueId,
+          },
+        },
+      });
+
+      if (!membership) {
+        return { success: false, error: "No pertenecés a esta liga." };
+      }
     }
 
     const cookieStore = await cookies();
