@@ -74,6 +74,7 @@ export default async function CollaboratorPage() {
           id: true,
           name: true,
           email: true,
+          image: true,
         },
       },
     },
@@ -119,6 +120,7 @@ export default async function CollaboratorPage() {
       id: m.user.id,
       name: m.user.name,
       email: m.user.email,
+      image: m.user.image,
     },
   }));
 

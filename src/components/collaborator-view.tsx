@@ -19,6 +19,7 @@ interface MemberItem {
     id: string;
     name: string | null;
     email: string | null;
+    image: string | null;
   };
 }
 
@@ -155,13 +156,28 @@ export function CollaboratorView({
                     <tr key={member.id} className="hover:bg-slate-900/20 transition-colors">
                       {/* Usuario */}
                       <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground">
-                            {member.user.name || "Sin nombre"}
-                          </span>
-                          <span className="text-xs text-slate-500 font-mono">
-                            {member.user.email}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          {member.user.image ? (
+                            <img
+                              src={member.user.image}
+                              alt="Avatar"
+                              className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0 object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user.id}`}
+                              alt="Avatar"
+                              className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 shrink-0"
+                            />
+                          )}
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground">
+                              {member.user.name || "Sin nombre"}
+                            </span>
+                            <span className="text-xs text-slate-500 font-mono">
+                              {member.user.email}
+                            </span>
+                          </div>
                         </div>
                       </td>
 
