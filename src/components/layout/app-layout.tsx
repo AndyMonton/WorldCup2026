@@ -274,6 +274,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
     { name: "Pronósticos", href: "/predictions", icon: CalendarDays },
     { name: "Rankings", href: "/ranking", icon: Trophy },
     { name: "Reglas", href: "/rules", icon: BookOpen },
+    { name: "Info Mundial", href: "/info-mundial", icon: Globe },
   ];
 
   if (isCollaborator) {

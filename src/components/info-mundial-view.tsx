@@ -413,7 +413,7 @@ export function InfoMundialView() {
               <button
                 key={f.value}
                 onClick={() => setStadiumFilter(f.value)}
-                className={`px-4 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                className={`px-4 py-2 text-sm md:text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                   stadiumFilter === f.value
                     ? "btn-premium border-primary"
                     : "bg-slate-900/50 text-slate-400 border-border/80 hover:text-foreground hover:bg-slate-900"
@@ -440,7 +440,7 @@ export function InfoMundialView() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
                     <div>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
+                      <span className="text-xs md:text-[9px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
                         {stadium.country}
                       </span>
                       <h4 className="font-extrabold text-base text-white mt-1 group-hover:text-primary transition-colors">
@@ -451,15 +451,15 @@ export function InfoMundialView() {
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-semibold uppercase">
+                    <div className="flex items-center gap-1 text-xs md:text-[11px] text-slate-400 font-semibold uppercase">
                       <MapPin className="w-3.5 h-3.5 text-primary" />
                       {stadium.city}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+                    <p className="text-sm md:text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
                       {stadium.history}
                     </p>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-border/50 flex justify-between items-center text-xs text-slate-400">
+                  <div className="mt-4 pt-3 border-t border-border/50 flex justify-between items-center text-sm md:text-xs text-slate-400">
                     <span className="font-medium">
                       Capacidad: <strong className="text-slate-200">{stadium.capacity.toLocaleString()}</strong>
                     </span>
@@ -485,7 +485,7 @@ export function InfoMundialView() {
                 <History className="w-5 h-5 text-primary" />
                 El Origen del Mundial
               </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-sm md:text-base text-slate-400 leading-relaxed">
                 La Copa del Mundo de la FIFA nació gracias a la visión de dirigentes como <strong>Jules Rimet</strong>. La primera edición se disputó en <strong>Uruguay en 1930</strong>, con solo 13 selecciones invitadas. Con el correr de las décadas, el torneo se convirtió en el evento unificador y de entretenimiento deportivo más sintonizado del planeta. En esta edición 2026, el Mundial alcanza una escala histórica al expandirse a <strong>48 equipos participantes</strong> y ser coorganizado por tres países de forma conjunta.
               </p>
             </div>
@@ -501,7 +501,7 @@ export function InfoMundialView() {
               <div className="overflow-x-auto max-h-[500px]">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-border bg-slate-900/50 text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">
+                    <tr className="border-b border-border bg-slate-900/50 text-xs md:text-sm text-slate-400 uppercase font-extrabold tracking-wider">
                       <th className="px-5 py-3">Año</th>
                       <th className="px-5 py-3">Sede</th>
                       <th className="px-5 py-3">Campeón</th>
@@ -509,7 +509,7 @@ export function InfoMundialView() {
                       <th className="px-5 py-3 text-right">Resultado</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/60 text-slate-300 text-xs">
+                  <tbody className="divide-y divide-border/60 text-slate-300 text-sm md:text-base">
                     {CHAMPIONS.map((c) => (
                       <tr key={c.year} className="hover:bg-slate-900/20 transition-colors">
                         <td className="px-5 py-3 font-bold text-slate-200">{c.year}</td>
@@ -517,7 +517,7 @@ export function InfoMundialView() {
                         <td className="px-5 py-3">
                           <span className="font-bold text-foreground flex items-center gap-1.5">
                             {c.champion}
-                            <span className="flex text-gold text-[10px]">
+                            <span className="flex text-gold text-xs md:text-sm">
                               {"★".repeat(c.stars)}
                             </span>
                           </span>
@@ -551,7 +551,7 @@ export function InfoMundialView() {
                     }`}
                   >
                     <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm md:text-base shadow ${
                         idx === 0
                           ? "bg-gold text-slate-900"
                           : "bg-slate-800 text-slate-300"
@@ -562,12 +562,12 @@ export function InfoMundialView() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center">
-                        <span className="font-extrabold text-sm text-foreground">{t.country}</span>
-                        <span className="text-xs font-black text-primary flex items-center gap-0.5">
+                        <span className="font-extrabold text-sm md:text-base text-foreground">{t.country}</span>
+                        <span className="text-sm md:text-base font-black text-primary flex items-center gap-0.5">
                           {t.titles} Mundiales
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 font-mono mt-1">
+                      <p className="text-xs md:text-sm text-slate-500 font-mono mt-1">
                         Años: {t.years}
                       </p>
                     </div>
@@ -841,7 +841,7 @@ export function InfoMundialView() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-6">
                 <div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
+                  <span className="text-xs md:text-[10px] px-2 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold uppercase tracking-wider">
                     Sede Oficial 2026 &bull; {selectedStadium.country}
                   </span>
                   <h3 className="font-black text-2xl md:text-3xl text-white mt-1">
@@ -857,18 +857,18 @@ export function InfoMundialView() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-slate-900/60 border border-border/60 rounded-2xl">
                   <MapPin className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                  <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-bold">Ciudad</span>
-                  <span className="text-xs font-bold text-slate-200">{selectedStadium.city}</span>
+                  <span className="block text-xs md:text-[9px] text-slate-500 uppercase tracking-widest font-bold">Ciudad</span>
+                  <span className="text-sm md:text-xs font-bold text-slate-200">{selectedStadium.city}</span>
                 </div>
                 <div className="p-3 bg-slate-900/60 border border-border/60 rounded-2xl">
                   <Users className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                  <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-bold">Capacidad</span>
-                  <span className="text-xs font-bold text-slate-200">{selectedStadium.capacity.toLocaleString()}</span>
+                  <span className="block text-xs md:text-[9px] text-slate-500 uppercase tracking-widest font-bold">Capacidad</span>
+                  <span className="text-sm md:text-xs font-bold text-slate-200">{selectedStadium.capacity.toLocaleString()}</span>
                 </div>
                 <div className="p-3 bg-slate-900/60 border border-border/60 rounded-2xl">
                   <Calendar className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                  <span className="block text-[9px] text-slate-500 uppercase tracking-widest font-bold">Inaugurado</span>
-                  <span className="text-xs font-bold text-slate-200">{selectedStadium.opened}</span>
+                  <span className="block text-xs md:text-[9px] text-slate-500 uppercase tracking-widest font-bold">Inaugurado</span>
+                  <span className="text-sm md:text-xs font-bold text-slate-200">{selectedStadium.opened}</span>
                 </div>
               </div>
 
@@ -878,7 +878,7 @@ export function InfoMundialView() {
                   <Info className="w-4 h-4 text-primary" />
                   Reseña Histórica
                 </h4>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-sm md:text-xs text-slate-400 leading-relaxed">
                   {selectedStadium.history}
                 </p>
               </div>
@@ -891,7 +891,7 @@ export function InfoMundialView() {
                 </h4>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {selectedStadium.highlights.map((h, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-[11px] text-slate-400 leading-relaxed bg-slate-900/20 border border-border/30 p-2.5 rounded-xl">
+                    <li key={idx} className="flex items-start gap-2 text-xs md:text-[11px] text-slate-400 leading-relaxed bg-slate-900/20 border border-border/30 p-2.5 rounded-xl">
                       <span className="text-primary font-bold mt-0.5">•</span>
                       <span>{h}</span>
                     </li>
