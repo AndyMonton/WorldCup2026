@@ -14,6 +14,8 @@ export default async function RulesPage() {
     const cookieStore = await cookies();
     const activeLeagueId = cookieStore.get("active_league_id")?.value;
 
+    const isAdmin = session?.user?.role === "ADMIN";
+
     const memberships = await prisma.leagueMembership.findMany({
       where: { userId },
       include: { league: true },
@@ -22,6 +24,14 @@ export default async function RulesPage() {
     if (memberships.length > 0) {
       const activeMem = memberships.find((m) => m.leagueId === activeLeagueId) || memberships[0];
       activeLeague = activeMem.league;
+    } else if (isAdmin && activeLeagueId) {
+      activeLeague = await prisma.league.findUnique({
+        where: { id: activeLeagueId },
+      });
+    }
+
+    if (!activeLeague && isAdmin) {
+      activeLeague = await prisma.league.findFirst();
     }
   }
 

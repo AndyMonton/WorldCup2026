@@ -21,6 +21,7 @@ export default async function RankingPage() {
     // 1. Obtener la membresía del usuario según liga activa (cookies)
     const cookieStore = await cookies();
     const activeLeagueId = cookieStore.get("active_league_id")?.value;
+    const isAdmin = session?.user?.role === "ADMIN";
 
     let userMembership = null;
     if (activeLeagueId) {
@@ -40,14 +41,24 @@ export default async function RankingPage() {
       });
     }
 
-    if (!userMembership) {
+    let targetLeagueId = activeLeagueId;
+    if (userMembership) {
+      targetLeagueId = userMembership.leagueId;
+    } else if (isAdmin) {
+      if (!targetLeagueId) {
+        const firstLeague = await prisma.league.findFirst();
+        targetLeagueId = firstLeague?.id;
+      }
+    }
+
+    if (!targetLeagueId) {
       throw new Error("No league membership");
     }
 
     // 2. Obtener todas las membresías de esa liga (excluyendo administradores globales)
     const dbMemberships = await prisma.leagueMembership.findMany({
       where: {
-        leagueId: userMembership.leagueId,
+        leagueId: targetLeagueId,
         user: { role: { not: "ADMIN" } }
       },
       include: {

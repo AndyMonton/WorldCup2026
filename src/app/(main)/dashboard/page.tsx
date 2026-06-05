@@ -138,6 +138,7 @@ export default async function DashboardPage() {
     // 1. Obtener membresía de liga activa (según cookie)
     const cookieStore = await cookies();
     const activeLeagueId = cookieStore.get("active_league_id")?.value;
+    const isAdmin = session?.user?.role === "ADMIN";
 
     let membership = null;
     if (activeLeagueId) {
@@ -159,99 +160,63 @@ export default async function DashboardPage() {
       });
     }
 
-    if (!membership) {
+    // Si es administrador y no tiene membresía, pero hay una liga activa seleccionada o alguna liga en el sistema
+    let activeLeague = null;
+    if (!membership && isAdmin) {
+      let targetLeagueId = activeLeagueId;
+      if (!targetLeagueId) {
+        const firstLeague = await prisma.league.findFirst();
+        targetLeagueId = firstLeague?.id;
+      }
+      if (targetLeagueId) {
+        activeLeague = await prisma.league.findUnique({
+          where: { id: targetLeagueId },
+        });
+      }
+    }
+
+    if (!membership && !activeLeague) {
       noLeague = true;
     } else {
+      const leagueId = membership ? membership.leagueId : activeLeague!.id;
+
       data.league = {
-        name: membership.league.name,
-        inviteCode: membership.league.inviteCode,
+        name: membership ? membership.league.name : activeLeague!.name,
+        inviteCode: membership ? membership.league.inviteCode : activeLeague!.inviteCode,
       };
 
-    data.stats.department = membership.department;
-    data.stats.internalGroup = membership.internalGroup;
-    data.stats.points = membership.points;
-    data.stats.pointsPhase1 = membership.pointsPhase1;
-    data.stats.pointsPhase2 = membership.pointsPhase2;
-    data.stats.pointsPhase3 = membership.pointsPhase3;
-    data.stats.exactCount = membership.exactCount;
-    data.stats.differenceCount = membership.differenceCount;
-    data.stats.tendencyCount = membership.tendencyCount;
-    data.stats.consolationCount = membership.consolationCount;
+      if (membership) {
+        data.stats.department = membership.department;
+        data.stats.internalGroup = membership.internalGroup;
+        data.stats.points = membership.points;
+        data.stats.pointsPhase1 = membership.pointsPhase1;
+        data.stats.pointsPhase2 = membership.pointsPhase2;
+        data.stats.pointsPhase3 = membership.pointsPhase3;
+        data.stats.exactCount = membership.exactCount;
+        data.stats.differenceCount = membership.differenceCount;
+        data.stats.tendencyCount = membership.tendencyCount;
+        data.stats.consolationCount = membership.consolationCount;
+      } else {
+        data.stats.department = "Administración";
+        data.stats.internalGroup = null;
+        data.stats.points = 0;
+      }
 
-    // 2. Cantidad de jugadores que pagaron (rankeados) en la liga (excluyendo administradores)
-    const totalPlayers = await prisma.leagueMembership.count({
-      where: { 
-        leagueId: membership.leagueId,
-        hasPaid: true,
-        user: { role: { not: "ADMIN" } }
-      },
-    });
-    data.stats.totalPlayers = totalPlayers;
-
-    // 3. Posición general del usuario (solo si ha pagado, excluyendo administradores)
-    if (membership.hasPaid) {
-      const betterPlayers = await prisma.leagueMembership.count({
-        where: {
-          leagueId: membership.leagueId,
-          hasPaid: true,
-          user: { role: { not: "ADMIN" } },
-          OR: [
-            { points: { gt: membership.points } },
-            { points: membership.points, exactCount: { gt: membership.exactCount } },
-          ],
-        },
-      });
-      data.stats.position = betterPlayers + 1;
-    } else {
-      data.stats.position = 0; // Usaremos 0 como indicador de "Sin rankear"
-    }
-
-    // 4. Posición sectorial (excluyendo administradores y no pagados)
-    const deptTotal = await prisma.leagueMembership.count({
-      where: { 
-        leagueId: membership.leagueId, 
-        department: membership.department,
-        hasPaid: true,
-        user: { role: { not: "ADMIN" } }
-      },
-    });
-    data.stats.deptTotalPlayers = deptTotal;
-
-    if (membership.hasPaid) {
-      const betterDeptPlayers = await prisma.leagueMembership.count({
-        where: {
-          leagueId: membership.leagueId,
-          department: membership.department,
-          hasPaid: true,
-          user: { role: { not: "ADMIN" } },
-          OR: [
-            { points: { gt: membership.points } },
-            { points: membership.points, exactCount: { gt: membership.exactCount } },
-          ],
-        },
-      });
-      data.stats.deptPosition = betterDeptPlayers + 1;
-    } else {
-      data.stats.deptPosition = 0;
-    }
-
-    // 5. Posición grupo interno (si aplica, excluyendo no pagados)
-    if (membership.internalGroup) {
-      const groupTotal = await prisma.leagueMembership.count({
+      // 2. Cantidad de jugadores que pagaron (rankeados) en la liga (excluyendo administradores)
+      const totalPlayers = await prisma.leagueMembership.count({
         where: { 
-          leagueId: membership.leagueId, 
-          internalGroup: membership.internalGroup,
+          leagueId: leagueId,
           hasPaid: true,
           user: { role: { not: "ADMIN" } }
         },
       });
-      data.stats.groupTotalPlayers = groupTotal;
+      data.stats.totalPlayers = totalPlayers;
 
-      if (membership.hasPaid) {
-        const betterGroupPlayers = await prisma.leagueMembership.count({
+      // 3. Posición general del usuario (solo si ha pagado, excluyendo administradores)
+      if (membership && membership.hasPaid) {
+        const betterPlayers = await prisma.leagueMembership.count({
           where: {
-            leagueId: membership.leagueId,
-            internalGroup: membership.internalGroup,
+            leagueId: leagueId,
             hasPaid: true,
             user: { role: { not: "ADMIN" } },
             OR: [
@@ -260,26 +225,93 @@ export default async function DashboardPage() {
             ],
           },
         });
-        data.stats.groupPosition = betterGroupPlayers + 1;
+        data.stats.position = betterPlayers + 1;
       } else {
+        data.stats.position = 0; // Usaremos 0 como indicador de "Sin rankear"
+      }
+
+      // 4. Posición sectorial (excluyendo administradores y no pagados)
+      if (membership) {
+        const deptTotal = await prisma.leagueMembership.count({
+          where: { 
+            leagueId: leagueId, 
+            department: membership.department,
+            hasPaid: true,
+            user: { role: { not: "ADMIN" } }
+          },
+        });
+        data.stats.deptTotalPlayers = deptTotal;
+
+        if (membership.hasPaid) {
+          const betterDeptPlayers = await prisma.leagueMembership.count({
+            where: {
+              leagueId: leagueId,
+              department: membership.department,
+              hasPaid: true,
+              user: { role: { not: "ADMIN" } },
+              OR: [
+                { points: { gt: membership.points } },
+                { points: membership.points, exactCount: { gt: membership.exactCount } },
+              ],
+            },
+          });
+          data.stats.deptPosition = betterDeptPlayers + 1;
+        } else {
+          data.stats.deptPosition = 0;
+        }
+      } else {
+        data.stats.deptTotalPlayers = 0;
+        data.stats.deptPosition = 0;
+      }
+
+      // 5. Posición grupo interno (si aplica, excluyendo no pagados)
+      if (membership && membership.internalGroup) {
+        const groupTotal = await prisma.leagueMembership.count({
+          where: { 
+            leagueId: leagueId, 
+            internalGroup: membership.internalGroup,
+            hasPaid: true,
+            user: { role: { not: "ADMIN" } }
+          },
+        });
+        data.stats.groupTotalPlayers = groupTotal;
+
+        if (membership.hasPaid) {
+          const betterGroupPlayers = await prisma.leagueMembership.count({
+            where: {
+              leagueId: leagueId,
+              internalGroup: membership.internalGroup,
+              hasPaid: true,
+              user: { role: { not: "ADMIN" } },
+              OR: [
+                { points: { gt: membership.points } },
+                { points: membership.points, exactCount: { gt: membership.exactCount } },
+              ],
+            },
+          });
+          data.stats.groupPosition = betterGroupPlayers + 1;
+        } else {
+          data.stats.groupPosition = 0;
+        }
+      } else {
+        data.stats.groupTotalPlayers = 0;
         data.stats.groupPosition = 0;
       }
-    }
 
-    // 6. Obtener el podio de la liga (top 3 que han pagado, excluyendo administradores)
-    const podiumMembers = await prisma.leagueMembership.findMany({
-      where: { 
-        leagueId: membership.leagueId,
-        hasPaid: true,
-        user: { role: { not: "ADMIN" } }
-      },
-      orderBy: [
-        { points: "desc" },
-        { exactCount: "desc" },
-      ],
-      take: 3,
-      include: { user: true },
-    });
+      // 6. Obtener el podio de la liga (top 3 que han pagado, excluyendo administradores)
+      const podiumMembers = await prisma.leagueMembership.findMany({
+        where: { 
+          leagueId: leagueId,
+          hasPaid: true,
+          user: { role: { not: "ADMIN" } }
+        },
+        orderBy: [
+          { points: "desc" },
+          { exactCount: "desc" },
+        ],
+        take: 3,
+        include: { user: true },
+      });
     
     data.podium = podiumMembers.map((m, index) => ({
       name: m.user.name || m.user.email,
