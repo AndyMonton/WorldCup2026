@@ -105,11 +105,28 @@ export default async function CollaboratorPage() {
     leagueName = league?.name || "Mi Liga";
   }
 
+  // Formatear miembros para evitar problemas de serialización de Date
+  const formattedMembers = memberships.map((m) => ({
+    id: m.id,
+    userId: m.userId,
+    department: m.department,
+    hasPaid: m.hasPaid,
+    role: m.role,
+    activePhase1: m.activePhase1,
+    activePhase2: m.activePhase2,
+    activePhase3: m.activePhase3,
+    user: {
+      id: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+    },
+  }));
+
   return (
     <CollaboratorView
       leagueId={activeLeagueId}
       leagueName={leagueName}
-      initialMembers={memberships}
+      initialMembers={formattedMembers as any}
       phase1Finished={phase1Finished}
       phase2Finished={phase2Finished}
     />
