@@ -512,7 +512,7 @@ export default async function DashboardPage() {
                 {hasPaid ? (
                   `#${positionIndex.toLocaleString("es-ES")} de ${totalPlayersCount.toLocaleString("es-ES")}`
                 ) : (
-                  <span className="text-amber-500 font-semibold text-[11px]">Sin rankear (pago pendiente)</span>
+                  "-"
                 )}
               </span>
             </div>
