@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   keywords: "Prode, Mundial 2026, Fútbol, Andres® 2026, Pronósticos, Clasificación, Ligas",
   authors: [{ name: "Andres® 2026" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: "/images/fifa-logo.jpg",
   },
 };
 

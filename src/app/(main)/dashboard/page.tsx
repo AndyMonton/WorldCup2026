@@ -450,11 +450,11 @@ export default async function DashboardPage() {
           <img
             src="/images/stadium_banner.png"
             alt="Stadium Banner"
-            className="w-full h-full object-cover object-center opacity-85"
+            className="w-full h-full object-cover object-center opacity-95"
           />
           {/* Degradado oscuro suavizado para integrar el fondo */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-slate-950/20"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/15 to-transparent"></div>
         </div>
 
         {/* Contenido sobre el banner */}
@@ -464,7 +464,7 @@ export default async function DashboardPage() {
           </span>
           
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-100 leading-tight">
-            Bienvenido al Prode Mundial <span className="text-gradient">2026</span>
+            Bienvenido al Prode del Mundial de Fútbol <span className="text-gradient">2026</span>
           </h1>
           
           <p className="text-sm md:text-base text-slate-300 font-medium leading-relaxed">
