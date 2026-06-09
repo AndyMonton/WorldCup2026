@@ -200,6 +200,18 @@ export function PredictionsView({
     };
   }, [hasChanges]);
 
+  // Hook to handle tab routing query param
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "bonus") {
+        setActiveTab("bonus");
+        setMobileActiveTab("bonus");
+      }
+    }
+  }, []);
+
   // Expose dirty flag to layout
   useEffect(() => {
     (window as any).hasUnsavedPredictions = hasChanges;
@@ -730,17 +742,7 @@ export function PredictionsView({
           </button>
         </div>
 
-        {/* Banner de fase inactiva */}
-        {((activeTab === "groups" && !activePhase1) ||
-          (activeTab === "playoffs-1" && !activePhase2) ||
-          (activeTab === "playoffs-2" && !activePhase3)) && (
-          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl text-sm shadow-md">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-400" />
-            <div>
-              <span className="font-bold">Pago Pendiente:</span> Podés cargar tus pronósticos normalmente, pero no figurarás en el Ranking para esta fase de la liga hasta que el administrador confirme tu pago.
-            </div>
-          </div>
-        )}
+
 
         {/* --- PANELES Y FILTROS --- */}
         {activeTab !== "bonus" && (
@@ -1389,16 +1391,7 @@ export function PredictionsView({
           </button>
         </div>
 
-        {/* Banner de fase inactiva móvil */}
-        {((mobileActiveTab === "groups" && !activePhase1) ||
-          (mobileActiveTab === "knockout" && (!activePhase2 || !activePhase3))) && (
-          <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl text-xs shadow-md mb-3">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
-            <div>
-              <span className="font-bold">Pago Pendiente:</span> Podés pronosticar, pero no figurarás en el Ranking hasta confirmar tu pago.
-            </div>
-          </div>
-        )}
+
 
         {/* 3. Carrusel Horizontal de Grupos (Solo en Grupos) */}
         {mobileActiveTab === "groups" && (

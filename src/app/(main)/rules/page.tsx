@@ -68,9 +68,9 @@ export default async function RulesPage() {
             <HelpCircle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-bold text-base text-foreground">Inscripción y Pago Pendiente</h3>
+            <h3 className="font-bold text-base text-foreground">Inscripción a la Liga</h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Los datos para el pago de la inscripción (Alias de transferencia y Monto) se mostrarán aquí una vez que te unas a una liga privada.
+              Los datos para la transferencia y el monto de inscripción se mostrarán aquí una vez que te unas a una liga privada.
             </p>
           </div>
         </div>

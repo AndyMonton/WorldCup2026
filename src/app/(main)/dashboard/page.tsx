@@ -529,7 +529,7 @@ export default async function DashboardPage() {
                 {hasPaid ? (
                   topPercent <= 5 ? "¡Estás en el top 5%! Sigue así." : `Estás en el top ${topPercent}% de la liga.`
                 ) : (
-                  "Aboná tu inscripción para figurar en la tabla de posiciones y ranking."
+                  "¡Seguí sumando puntos para escalar posiciones!"
                 )}
               </p>
             </div>

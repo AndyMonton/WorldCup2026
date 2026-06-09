@@ -46,11 +46,11 @@ export function TransferAliasCard({
         </div>
         <div className="space-y-1 text-center md:text-left w-full">
           <h2 className="text-lg font-extrabold text-foreground tracking-tight">
-            Inscripción y Pago Requerido
+            Inscripción a la Liga
           </h2>
           <p className="text-xs text-slate-400 max-w-lg leading-relaxed">
             Para participar oficialmente en el ranking, clasificaciones y premios de la liga{" "}
-            <span className="font-bold text-foreground">{leagueName}</span>, recordá realizar la transferencia del valor de inscripción.
+            <span className="font-bold text-foreground">{leagueName}</span>, recordá completar los datos de inscripción.
           </p>
           {formattedAmount && (
             <p className="text-sm font-bold text-slate-200 pt-1">
