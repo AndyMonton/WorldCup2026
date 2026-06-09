@@ -121,17 +121,15 @@ export async function saveBonusPredictions(
 
     if (!userId) {
       return { success: false, error: "Usuario no autenticado." };
-    }
-
-    // Bloqueo antes del inicio del primer partido (11 de Junio, 2026 19:00 UTC)
+    }    // Bloqueo 15 minutos antes del inicio del primer partido (11 de Junio, 2026 19:00 UTC)
     const firstMatchStart = new Date("2026-06-11T19:00:00Z");
-    if (new Date() > firstMatchStart) {
+    const deadline = new Date(firstMatchStart.getTime() - 15 * 60 * 1000);
+    if (new Date() > deadline) {
       return {
         success: false,
-        error: "Los pronósticos especiales ya están cerrados porque el torneo ha comenzado.",
+        error: "Los pronósticos especiales ya están cerrados (límite de 15 minutos antes del partido inaugural).",
       };
     }
-
     if (championId === runnerUpId) {
       return {
         success: false,

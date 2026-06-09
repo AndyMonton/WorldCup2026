@@ -116,6 +116,9 @@ export function PredictionsView({
   const [championId, setChampionId] = useState(bonusPrediction?.championId || "");
   const [runnerUpId, setRunnerUpId] = useState(bonusPrediction?.runnerUpId || "");
   const [topScorerName, setTopScorerName] = useState(bonusPrediction?.topScorerName || "");
+  const [originalChampion, setOriginalChampion] = useState(bonusPrediction?.championId || "");
+  const [originalRunnerUp, setOriginalRunnerUp] = useState(bonusPrediction?.runnerUpId || "");
+  const [originalTopScorer, setOriginalTopScorer] = useState(bonusPrediction?.topScorerName || "");
   const [savingBonus, setSavingBonus] = useState(false);
   const [savedBonusSuccess, setSavedBonusSuccess] = useState(false);
   const [bonusError, setBonusError] = useState<string | null>(null);
@@ -150,6 +153,14 @@ export function PredictionsView({
     });
   };
 
+  const hasBonusChanges = useMemo(() => {
+    return (
+      championId !== originalChampion ||
+      runnerUpId !== originalRunnerUp ||
+      topScorerName !== originalTopScorer
+    );
+  }, [championId, runnerUpId, topScorerName, originalChampion, originalRunnerUp, originalTopScorer]);
+
   const hasChanges = useMemo(() => {
     // 1. Check match predictions
     for (const m of matches) {
@@ -174,16 +185,12 @@ export function PredictionsView({
     }
 
     // 2. Check special bonus predictions
-    const originalChampion = bonusPrediction?.championId || "";
-    const originalRunnerUp = bonusPrediction?.runnerUpId || "";
-    const originalTopScorer = bonusPrediction?.topScorerName || "";
-
-    if (championId !== originalChampion || runnerUpId !== originalRunnerUp || topScorerName !== originalTopScorer) {
+    if (hasBonusChanges) {
       return true;
     }
 
     return false;
-  }, [scores, predictedWinners, matches, championId, runnerUpId, topScorerName, bonusPrediction, activePhase1, activePhase2, activePhase3]);
+  }, [scores, predictedWinners, matches, hasBonusChanges, activePhase1, activePhase2, activePhase3]);
 
   // Hook for beforeunload browser alerts
   useEffect(() => {
@@ -211,6 +218,13 @@ export function PredictionsView({
       }
     }
   }, []);
+
+  // Sync original bonus values on prop change
+  useEffect(() => {
+    setOriginalChampion(bonusPrediction?.championId || "");
+    setOriginalRunnerUp(bonusPrediction?.runnerUpId || "");
+    setOriginalTopScorer(bonusPrediction?.topScorerName || "");
+  }, [bonusPrediction]);
 
   // Expose dirty flag to layout
   useEffect(() => {
@@ -352,7 +366,7 @@ export function PredictionsView({
       runnerUpId !== originalRunnerUp ||
       topScorerName !== originalTopScorer;
 
-    const isBonusLocked = new Date() > new Date("2026-06-11T19:00:00Z");
+    const isBonusLocked = new Date() > new Date(new Date("2026-06-11T19:00:00Z").getTime() - 15 * 60 * 1000);
 
     if (matchesToSave.length === 0 && (!bonusChanged || isBonusLocked)) {
       setGlobalStatus({ type: "info", message: "No hay cambios pendientes o válidos por guardar." });
@@ -470,9 +484,9 @@ export function PredictionsView({
     });
 
     // Restaurar especiales
-    setChampionId(bonusPrediction?.championId || "");
-    setRunnerUpId(bonusPrediction?.runnerUpId || "");
-    setTopScorerName(bonusPrediction?.topScorerName || "");
+    setChampionId(originalChampion);
+    setRunnerUpId(originalRunnerUp);
+    setTopScorerName(originalTopScorer);
     setSavedBonusSuccess(false);
     setBonusError(null);
 
@@ -583,6 +597,9 @@ export function PredictionsView({
         await new Promise((resolve) => setTimeout(resolve, 800));
         setSavingBonus(false);
         setSavedBonusSuccess(true);
+        setOriginalChampion(championId);
+        setOriginalRunnerUp(runnerUpId);
+        setOriginalTopScorer(topScorerName);
         return;
       }
 
@@ -590,6 +607,9 @@ export function PredictionsView({
       setSavingBonus(false);
       if (res.success) {
         setSavedBonusSuccess(true);
+        setOriginalChampion(championId);
+        setOriginalRunnerUp(runnerUpId);
+        setOriginalTopScorer(topScorerName);
       } else {
         setBonusError(res.error);
       }
@@ -637,9 +657,9 @@ export function PredictionsView({
     setStatusFilter("TODOS");
   };
 
-  // Fecha del primer partido para verificar bloqueo de especiales
+  // Fecha del primer partido para verificar bloqueo de especiales (15 minutos antes del inicio)
   const firstMatchStart = new Date("2026-06-11T19:00:00Z");
-  const isBonusLocked = new Date() > firstMatchStart;
+  const isBonusLocked = new Date() > new Date(firstMatchStart.getTime() - 15 * 60 * 1000);
 
   // Cálculos dinámicos para el encabezado del grupo activo en mobile
   const currentGroupMatches = matches.filter((m) => m.stage === "GROUPS" && (groupFilter === "TODOS" ? true : m.group === groupFilter));
@@ -1280,8 +1300,12 @@ export function PredictionsView({
               ) : (
                 <button
                   type="submit"
-                  disabled={savingBonus}
-                  className="w-full py-3 btn-premium md:hidden"
+                  disabled={savingBonus || !hasBonusChanges}
+                  className={`w-full py-3 btn-premium transition-all ${
+                    !hasBonusChanges
+                      ? "opacity-50 cursor-not-allowed bg-slate-800 border-border text-slate-500 hover:bg-slate-800"
+                      : "cursor-pointer"
+                  }`}
                 >
                   {savingBonus ? (
                     <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
@@ -1865,8 +1889,12 @@ export function PredictionsView({
               ) : (
                 <button
                   type="submit"
-                  disabled={savingBonus}
-                  className="w-full py-3 btn-premium"
+                  disabled={savingBonus || !hasBonusChanges}
+                  className={`w-full py-3 btn-premium transition-all ${
+                    !hasBonusChanges
+                      ? "opacity-50 cursor-not-allowed bg-slate-800 border-border text-slate-500 hover:bg-slate-800"
+                      : "cursor-pointer"
+                  }`}
                 >
                   {savingBonus ? (
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
