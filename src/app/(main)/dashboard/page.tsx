@@ -551,7 +551,7 @@ export default async function DashboardPage() {
                 alt=""
                 className="w-16 h-10 md:w-20 md:h-12 object-cover rounded-lg shadow-md border border-border"
               />
-              <span className="text-sm font-extrabold truncate max-w-full text-foreground uppercase tracking-wide">
+              <span className="text-xs md:text-sm font-extrabold text-foreground uppercase tracking-wide text-center leading-tight break-words w-full">
                 {nextMatch.homeTeam?.name || "Local"}
               </span>
             </div>
@@ -574,7 +574,7 @@ export default async function DashboardPage() {
                 alt=""
                 className="w-16 h-10 md:w-20 md:h-12 object-cover rounded-lg shadow-md border border-border"
               />
-              <span className="text-sm font-extrabold truncate max-w-full text-foreground uppercase tracking-wide">
+              <span className="text-xs md:text-sm font-extrabold text-foreground uppercase tracking-wide text-center leading-tight break-words w-full">
                 {nextMatch.awayTeam?.name || "Visitante"}
               </span>
             </div>
