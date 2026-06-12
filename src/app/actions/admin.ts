@@ -157,8 +157,8 @@ export async function saveMatchResult(
         where: { matchId },
       });
 
-      // c. Recalcular y actualizar cada predicción
-      for (const pred of predictions) {
+      // c. Recalcular y actualizar cada predicción en paralelo
+      await Promise.all(predictions.map((pred) => {
         const scoreBreakdown = calculateScore(
           {
             homeScore: pred.homeScore,
@@ -173,7 +173,7 @@ export async function saveMatchResult(
           }
         );
 
-        await tx.prediction.update({
+        return tx.prediction.update({
           where: { id: pred.id },
           data: {
             points: scoreBreakdown.points,
@@ -185,15 +185,11 @@ export async function saveMatchResult(
             bonusMatch: scoreBreakdown.bonusMatch,
           },
         });
-      }
+      }));
 
-      // d. Actualizar la caché de puntajes en LeagueMembership para todos los usuarios afectados
-      // Obtenemos los IDs de los usuarios que hicieron predicciones
+      // d. Actualizar la caché de puntajes en LeagueMembership para todos los usuarios afectados (en paralelo)
       const userIds = Array.from(new Set(predictions.map((p) => p.userId)));
-
-      for (const uId of userIds) {
-        await recalculateUserLeagueMemberships(tx, uId);
-      }
+      await Promise.all(userIds.map((uId) => recalculateUserLeagueMemberships(tx, uId)));
 
       // e. Recalcular goleadores
       await recalculateGoalscorers(tx);
@@ -206,6 +202,8 @@ export async function saveMatchResult(
           details: `Marcador guardado para partido ID ${matchId}: ${homeScore}-${awayScore}. Goleadores y puntos recalculados.`,
         },
       });
+    }, {
+      timeout: 45000 // 45 segundos
     });
 
     revalidatePath("/predictions");
@@ -572,7 +570,8 @@ export async function updateUsersPhaseStatus(
         },
       });
 
-      for (const m of memberships) {
+      // Actualizar y recalcular en paralelo
+      await Promise.all(memberships.map(async (m) => {
         const updateData: any = {};
         if (phase === 1) updateData.activePhase1 = active;
         else if (phase === 2) updateData.activePhase2 = active;
@@ -585,7 +584,7 @@ export async function updateUsersPhaseStatus(
 
         // 2. Recalcular los puntos del usuario en base a los nuevos flags
         await recalculateUserLeagueMemberships(tx, m.userId);
-      }
+      }));
 
       await tx.auditLog.create({
         data: {
@@ -594,6 +593,8 @@ export async function updateUsersPhaseStatus(
           details: `Habilitación de Fase ${phase} actualizada a ${active ? "ACTIVA" : "INACTIVA"} para ${userIds.length} usuario(s) en la liga ID ${leagueId}.`,
         },
       });
+    }, {
+      timeout: 45000 // 45 segundos
     });
 
     revalidatePath("/admin");
@@ -643,14 +644,12 @@ export async function updateLeagueTransferInfo(
         },
       });
 
-      // 3. Si cambió requiresPayment, recalculamos todos los miembros
+      // 3. Si cambió requiresPayment, recalculamos todos los miembros en paralelo
       if (currentLeague && currentLeague.requiresPayment !== requiresPayment) {
         const memberships = await tx.leagueMembership.findMany({
           where: { leagueId },
         });
-        for (const m of memberships) {
-          await recalculateUserLeagueMemberships(tx, m.userId);
-        }
+        await Promise.all(memberships.map((m) => recalculateUserLeagueMemberships(tx, m.userId)));
       }
 
       await tx.auditLog.create({
@@ -660,6 +659,8 @@ export async function updateLeagueTransferInfo(
           details: `Información de transferencia de liga ID ${leagueId} actualizada. Alias: ${transferAlias.trim() || 'Ninguno'}. Importe: ${transferAmount || 'Ninguno'}. Titular: ${accountName || 'Ninguno'}. Tel: ${phone || 'Ninguno'}. Requiere pago: ${requiresPayment ? "SI" : "NO"}.`,
         },
       });
+    }, {
+      timeout: 45000 // 45 segundos
     });
 
     revalidatePath("/admin");
@@ -893,10 +894,8 @@ export async function updateLeaguePaymentRequirement(leagueId: string, requiresP
         where: { leagueId },
       });
 
-      // 3. Recalcular
-      for (const m of memberships) {
-        await recalculateUserLeagueMemberships(tx, m.userId);
-      }
+      // 3. Recalcular en paralelo
+      await Promise.all(memberships.map((m) => recalculateUserLeagueMemberships(tx, m.userId)));
 
       await tx.auditLog.create({
         data: {
@@ -905,6 +904,8 @@ export async function updateLeaguePaymentRequirement(leagueId: string, requiresP
           details: `Requisito de pago para liga ID ${leagueId} actualizado a: ${requiresPayment ? "SI" : "NO"}.`,
         },
       });
+    }, {
+      timeout: 45000 // 45 segundos
     });
 
     revalidatePath("/admin");

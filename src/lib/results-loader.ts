@@ -94,7 +94,7 @@ function fetchJsonHttps(url: string): Promise<any> {
     const options = {
       rejectUnauthorized: false, // Ignorar errores de certificado y revocación
     };
-    https.get(url, options, (res) => {
+    const req = https.get(url, options, (res) => {
       if (res.statusCode !== 200) {
         reject(new Error(`Fallo HTTP Status: ${res.statusCode}`));
         return;
@@ -110,8 +110,15 @@ function fetchJsonHttps(url: string): Promise<any> {
           reject(e);
         }
       });
-    }).on("error", (err) => {
+    });
+
+    req.on("error", (err) => {
       reject(err);
+    });
+
+    req.setTimeout(15000, () => {
+      req.destroy();
+      reject(new Error("Timeout de conexión (15s) al consultar la API de resultados"));
     });
   });
 }
@@ -131,7 +138,7 @@ export async function runAutomatedResultsUpdate() {
   const planUsed = "API Real (worldcup26.ir)";
 
   try {
-    console.log("[Actualizador] Consultando partidos finalizados desde la API real...");
+    console.log("[Actualizador] Consultando partidos finalizados y en vivo desde la API real...");
     const url = "https://worldcup26.ir/get/games";
     const json = await fetchJsonHttps(url);
     scrapedMatches = json.games || [];
@@ -142,9 +149,11 @@ export async function runAutomatedResultsUpdate() {
   }
 
   for (const m of scrapedMatches) {
-    // Solo procesar si el partido ha finalizado según la API
     const isFinished = m.finished === "TRUE" || m.finished === true || m.time_elapsed === "finished";
-    if (!isFinished) continue;
+    const isPlaying = !isFinished && m.time_elapsed !== "notstarted" && m.time_elapsed;
+
+    // Solo procesar si el partido ha finalizado o está jugándose
+    if (!isFinished && !isPlaying) continue;
 
     const homeCode = TEAM_NAME_TO_CODE[m.home_team_name_en];
     const awayCode = TEAM_NAME_TO_CODE[m.away_team_name_en];
@@ -170,7 +179,29 @@ export async function runAutomatedResultsUpdate() {
 
       const homeScore = parseInt(m.home_score);
       const awayScore = parseInt(m.away_score);
-      
+
+      // CASO A: El partido está en juego (parcial)
+      if (isPlaying) {
+        const hasScoreChanged = dbMatch.homeScore !== homeScore || dbMatch.awayScore !== awayScore;
+        const statusNeedsUpdate = dbMatch.status !== MatchStatus.PLAYING;
+
+        if (hasScoreChanged || statusNeedsUpdate) {
+          console.log(`[Actualizador] [EN JUEGO] Actualizando parcial: ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} -> ${homeScore}-${awayScore} (${m.time_elapsed})`);
+          await prisma.match.update({
+            where: { id: dbMatch.id },
+            data: {
+              homeScore,
+              awayScore,
+              status: MatchStatus.PLAYING,
+            },
+          });
+          summary.updatedCount++;
+          summary.matches.push(`${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} (En juego)`);
+        }
+        continue;
+      }
+
+      // CASO B: El partido ha finalizado
       const homeScorers = m.home_scorers === "null" || !m.home_scorers ? null : m.home_scorers;
       const awayScorers = m.away_scorers === "null" || !m.away_scorers ? null : m.away_scorers;
 
@@ -182,16 +213,13 @@ export async function runAutomatedResultsUpdate() {
         } else if (awayScore > homeScore) {
           winnerId = dbMatch.awayTeamId;
         }
-        // Nota: en caso de empate en playoffs, el API informará la resolución
-        // (por ejemplo sumando goles en el global o mostrando la definición).
-        // Si sigue empatado y no se determina por goles ordinarios, winnerId quedará como null
-        // a la espera de resolución manual por el administrador.
       }
 
-      console.log(`[Actualizador] Actualizando: ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} -> Resultado: ${homeScore}-${awayScore}`);
+      console.log(`[Actualizador] [FINALIZADO] Actualizando y recalculando: ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} -> Resultado: ${homeScore}-${awayScore}`);
 
+      // Transacción optimizada con un timeout incrementado a 45 segundos
       await prisma.$transaction(async (tx) => {
-        // 1. Actualizar el partido
+        // 1. Actualizar el partido a finalizado
         const updatedMatch = await tx.match.update({
           where: { id: dbMatch.id },
           data: {
@@ -204,12 +232,13 @@ export async function runAutomatedResultsUpdate() {
           },
         });
 
-        // 2. Recalcular predicciones del partido
+        // 2. Obtener todas las predicciones del partido
         const predictions = await tx.prediction.findMany({
           where: { matchId: dbMatch.id },
         });
 
-        for (const pred of predictions) {
+        // Recalcular y actualizar predicciones en paralelo
+        await Promise.all(predictions.map((pred) => {
           const scoreBreakdown = calculateScore(
             {
               homeScore: pred.homeScore,
@@ -224,7 +253,7 @@ export async function runAutomatedResultsUpdate() {
             }
           );
 
-          await tx.prediction.update({
+          return tx.prediction.update({
             where: { id: pred.id },
             data: {
               points: scoreBreakdown.points,
@@ -236,13 +265,11 @@ export async function runAutomatedResultsUpdate() {
               bonusMatch: scoreBreakdown.bonusMatch,
             },
           });
-        }
+        }));
 
-        // 3. Actualizar caché de puntajes de los usuarios
+        // 3. Actualizar caché de puntajes de los usuarios (en paralelo)
         const userIds = Array.from(new Set(predictions.map((p) => p.userId)));
-        for (const uId of userIds) {
-          await recalculateUserLeagueMemberships(tx, uId);
-        }
+        await Promise.all(userIds.map((uId) => recalculateUserLeagueMemberships(tx, uId)));
 
         // 4. Recalcular goleadores
         await recalculateGoalscorers(tx);
@@ -256,10 +283,12 @@ export async function runAutomatedResultsUpdate() {
             details: `Resultados y goleadores cargados automáticamente vía ${planUsed} para ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name}.`,
           },
         });
+      }, {
+        timeout: 45000 // 45 segundos
       });
 
       summary.updatedCount++;
-      summary.matches.push(`${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name}`);
+      summary.matches.push(`${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} (Finalizado)`);
 
     } catch (err: any) {
       console.error(`Error al procesar el partido:`, err);
