@@ -617,36 +617,38 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
 
         {/* --- NAVEGACIÓN INFERIOR PARA MÓVIL (TIPO APP MÓVIL) --- */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-card/90 backdrop-blur-lg border-t border-border flex justify-around items-center py-2 px-2 z-10">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={(e) => {
-                  if ((window as any).hasUnsavedPredictions) {
-                    e.preventDefault();
-                    triggerConfirm(
-                      "Cambios sin Guardar",
-                      "Tenés pronósticos cargados sin guardar. Si salís de esta pantalla, perderás los cambios. ¿Querés salir de todas formas?",
-                      () => {
-                        (window as any).hasUnsavedPredictions = false;
-                        router.push(item.href);
-                      }
-                    );
-                  }
-                }}
-                className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all text-xs font-semibold ${
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-slate-500 hover:text-foreground"
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+          {navigation
+            .filter((item) => item.name !== "Info Mundial" && item.name !== "Control de Pagos" && item.name !== "Control de Pago")
+            .map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={(e) => {
+                    if ((window as any).hasUnsavedPredictions) {
+                      e.preventDefault();
+                      triggerConfirm(
+                        "Cambios sin Guardar",
+                        "Tenés pronósticos cargados sin guardar. Si salís de esta pantalla, perderás los cambios. ¿Querés salir de todas formas?",
+                        () => {
+                          (window as any).hasUnsavedPredictions = false;
+                          router.push(item.href);
+                        }
+                      );
+                    }
+                  }}
+                  className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition-all text-sm font-bold ${
+                    isActive
+                      ? "text-primary bg-primary/10"
+                      : "text-slate-500 dark:text-slate-300 hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="w-6.5 h-6.5" />
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
         </nav>
       </main>
 
