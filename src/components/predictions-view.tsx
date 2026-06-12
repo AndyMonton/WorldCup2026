@@ -946,7 +946,7 @@ export function PredictionsView({
                             <div className="mt-4 p-3 rounded-xl bg-slate-950/60 border border-border/60 flex flex-col gap-1.5">
                               <div className="flex justify-between items-center text-xs">
                                 <span className="text-slate-400 font-semibold">Tu pronóstico:</span>
-                                <span className="font-extrabold text-foreground">
+                                <span className="font-extrabold text-blue-600 dark:text-yellow-400">
                                   {match.userPrediction
                                     ? `${match.userPrediction.homeScore} - ${match.userPrediction.awayScore}`
                                     : "No pronosticado"}
@@ -1594,7 +1594,7 @@ export function PredictionsView({
                           <div className="mt-3 p-2.5 rounded-xl bg-slate-950 border border-border/30 flex flex-col gap-1 text-[10px]">
                             <div className="flex justify-between items-center text-slate-400">
                               <span>Tu pronóstico:</span>
-                              <span className="font-extrabold text-foreground">
+                              <span className="font-black text-xl text-blue-600 dark:text-yellow-400">
                                 {match.userPrediction
                                   ? `${match.userPrediction.homeScore} - ${match.userPrediction.awayScore}`
                                   : "No pronosticado"}

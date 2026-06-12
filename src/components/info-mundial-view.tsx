@@ -86,7 +86,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 80000,
     opened: 2009,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_dallas.jpg",
     history: "Conocido popularmente como 'Jerry World' (por el dueño de los Dallas Cowboys, Jerry Jones), es una colosal obra arquitectónica famosa por su techo retráctil gigante y su imponente pantalla central colgada de 55 metros de largo. Este estadio albergará múltiples partidos decisivos, incluyendo una de las semifinales.",
     highlights: [
       "Capacidad expandible hasta 105.000 espectadores para eventos masivos",
@@ -102,7 +102,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 71000,
     opened: 2017,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_atlanta.jpg",
     history: "Famoso por su vanguardista diseño con un techo retráctil de ocho paneles que funciona de forma circular imitando el diafragma de una cámara fotográfica. Tiene una pantalla circular continua de 360 grados ('Halo Board') justo debajo del techo. Este estadio albergará partidos de eliminación y una de las semifinales.",
     highlights: [
       "Innovador techo retráctil en forma de pétalos",
@@ -118,7 +118,7 @@ const STADIUMS: Stadium[] = [
     country: "México",
     capacity: 53500,
     opened: 2015,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_bbva.jpg",
     history: "Conocido como 'El Gigante de Acero' debido a su espectacular estructura metálica exterior. Es famoso a nivel internacional por la espectacular vista del Cerro de la Silla que los aficionados pueden contemplar directamente desde las tribunas. Su diseño aerodinámico rinde homenaje a la industria siderúrgica local.",
     highlights: [
       "Reconocido mundialmente por sus vistas panorámicas al Cerro de la Silla",
@@ -134,7 +134,7 @@ const STADIUMS: Stadium[] = [
     country: "México",
     capacity: 48071,
     opened: 2010,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_akron.jpg",
     history: "Un diseño ecológico revolucionario que asemeja un volcán coronado por una gran nube (la cubierta blanca del techo). La estructura exterior está completamente cubierta de pasto natural, integrándose de forma armónica con el paisaje boscoso circundante. Es el hogar de las populares Chivas de Guadalajara.",
     highlights: [
       "Diseño orgánico en forma de volcán ecológico cubierto de pasto",
@@ -150,7 +150,7 @@ const STADIUMS: Stadium[] = [
     country: "Canadá",
     capacity: 54500,
     opened: 1983,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_vancouver.jpg",
     history: "Un estadio icónico a orillas del mar en la costa oeste de Canadá. Cuenta con el techo retráctil sostenido por cables más grande del mundo. Fue completamente renovado y sirvió como escenario principal para las ceremonias de apertura y clausura de los Juegos Olímpicos de Invierno de Vancouver 2010.",
     highlights: [
       "El techo retráctil sostenido por cables más grande del mundo",
@@ -166,7 +166,7 @@ const STADIUMS: Stadium[] = [
     country: "Canadá",
     capacity: 45000,
     opened: 2007,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_toronto.jpg",
     history: "Hogar del Toronto FC y de la Selección Nacional de Canadá. Es un estadio clásico de estilo inglés ubicado en Exhibition Place, junto al espectacular Lago Ontario. Está siendo sometido a una importante expansión temporal en sus tribunas norte y sur para llegar a la capacidad requerida de 45.000 espectadores.",
     highlights: [
       "Hogar histórico de la Selección Nacional de Canadá",
@@ -182,7 +182,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 72220,
     opened: 2002,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_houston.jpg",
     history: "El primer estadio de la NFL en construirse con un techo retráctil. Es un espacio multifuncional gigantesco que alberga desde partidos de fútbol de la Copa Oro y Copa América hasta el famosísimo Houston Livestock Show and Rodeo. Cuenta con una gran flexibilidad de configuración.",
     highlights: [
       "Primer estadio en la historia de la NFL con techo retráctil",
@@ -198,7 +198,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 76416,
     opened: 1972,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_kansas.jpg",
     history: "Un estadio con forma de tazón abierto famoso por poseer el récord Guinness oficial como el estadio deportivo más ruidoso del planeta (alcanzando 142.2 decibelios en 2014). Su diseño curvo ofrece una de las mejores líneas de visión del campo de juego en todo Estados Unidos.",
     highlights: [
       "Récord Guinness oficial como el estadio más ruidoso del mundo (142.2 dB)",
@@ -214,7 +214,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 64767,
     opened: 1987,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_miami.jpg",
     history: "Una de las sedes de entretenimiento más famosas del mundo. Ha albergado 6 ediciones de Super Bowl, la Copa de Tenis de Miami y cuenta con un circuito de Fórmula 1 en su estacionamiento. Fue renovado con un gran dosel de acero que cubre el 90% de los asientos contra el sol tropical.",
     highlights: [
       "Ha albergado 6 Super Bowls y la Copa de Tenis de Miami",
@@ -230,7 +230,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 67594,
     opened: 2003,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_philadelphia.jpg",
     history: "Apodado 'The Linc', es reconocido mundialmente por sus masivos esfuerzos ecológicos. El estadio genera parte de su propia energía mediante la instalación de 11.000 paneles solares y 14 microturbinas eólicas en su estructura superior. Alberga a los Philadelphia Eagles de la NFL.",
     highlights: [
       "Genera su propia energía limpia con paneles solares y microturbinas eólicas",
@@ -246,7 +246,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 68740,
     opened: 2002,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_seattle.jpg",
     history: "Famoso por su diseño acústico único: las tribunas laterales están cubiertas por grandes techos curvos de metal que rebotan el sonido de los fanáticos de vuelta hacia el campo. Esto genera una atmósfera ensordecedora, temida por los equipos rivales de los Seattle Sounders y Seattle Seahawks.",
     highlights: [
       "Diseño acústico curvo que potencia el sonido del público en el campo",
@@ -262,7 +262,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 68500,
     opened: 2014,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_sanfrancisco.jpg",
     history: "Situado en el corazón tecnológico de Silicon Valley, fue el primer estadio profesional en Estados Unidos en recibir la prestigiosa certificación ecológica LEED Gold. Cuenta con un techo ecológico cubierto de vegetación nativa y es el estadio más conectado digitalmente del torneo.",
     highlights: [
       "Primer estadio en recibir la certificación ecológica LEED Gold",
@@ -278,7 +278,7 @@ const STADIUMS: Stadium[] = [
     country: "Estados Unidos",
     capacity: 65878,
     opened: 2002,
-    image: "/images/stadium_banner.png",
+    image: "/images/estadio_boston.jpg",
     history: "Ubicado a las afueras de Boston, es el hogar de los exitosos New England Patriots de la NFL. Cuenta con un diseño único que incluye un faro gigante de 67 metros de altura en su extremo norte, un homenaje a los tradicionales faros costeros de la histórica región de Nueva Inglaterra.",
     highlights: [
       "Posee un icónico faro gigante que corona la entrada del estadio",
@@ -335,8 +335,14 @@ const TOP_TEAMS = [
   { country: "Inglaterra", titles: 1, years: "1966" }
 ];
 
-export function InfoMundialView() {
-  const [activeTab, setActiveTab] = useState<"stadiums" | "history" | "trivia">("stadiums");
+export function InfoMundialView({
+  finishedMatches = [],
+  scorers = [],
+}: {
+  finishedMatches?: any[];
+  scorers?: any[];
+}) {
+  const [activeTab, setActiveTab] = useState<"stadiums" | "history" | "trivia" | "results">("stadiums");
   const [selectedStadium, setSelectedStadium] = useState<Stadium | null>(null);
   const [stadiumFilter, setStadiumFilter] = useState<string>("ALL");
 
@@ -361,7 +367,7 @@ export function InfoMundialView() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border/80 pb-px">
+      <div className="flex border-b border-border/80 pb-px overflow-x-auto scrollbar-none whitespace-nowrap">
         <button
           onClick={() => setActiveTab("stadiums")}
           className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 outline-none cursor-pointer transition-all ${
@@ -396,6 +402,18 @@ export function InfoMundialView() {
         >
           <Sparkles className="w-4 h-4" />
           Datos y Curiosidades
+        </button>
+
+        <button
+          onClick={() => setActiveTab("results")}
+          className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 outline-none cursor-pointer transition-all ${
+            activeTab === "results"
+              ? "border-primary text-primary font-bold bg-primary/5"
+              : "border-transparent text-slate-400 hover:text-foreground"
+          }`}
+        >
+          <Trophy className="w-4 h-4 text-primary" />
+          Todos los Resultados
         </button>
       </div>
 
@@ -815,6 +833,212 @@ export function InfoMundialView() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- PESTAÑA: TODOS LOS RESULTADOS --- */}
+      {activeTab === "results" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Columna Izquierda: Resultados oficiales de los partidos jugados */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="glass-panel border border-border rounded-2xl p-6 bg-slate-900/10 space-y-4">
+              <h3 className="text-lg font-black tracking-tight text-slate-100 uppercase flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-primary" />
+                Resultados Oficiales
+              </h3>
+              <p className="text-sm text-slate-400">
+                Marcadores reales cargados al instante. Los puntos y rankings del prode se recalculan automáticamente al finalizar cada partido.
+              </p>
+            </div>
+
+            {finishedMatches.length === 0 ? (
+              <div className="glass-panel border border-border rounded-2xl p-12 text-center text-slate-400">
+                <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4 animate-pulse" />
+                <p className="text-base font-semibold">No hay partidos jugados todavía.</p>
+                <p className="text-xs text-slate-500 mt-1">Los resultados oficiales se mostrarán aquí una vez que comiencen los partidos.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {finishedMatches.map((m) => {
+                  const matchDate = new Date(m.date);
+                  const formattedDate = matchDate.toLocaleDateString("es-AR", {
+                    day: "numeric",
+                    month: "long",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }) + " hs";
+
+                  const cleanHomeScorers = m.homeScorers && m.homeScorers !== "null"
+                    ? m.homeScorers.replace(/[{}]/g, "").replace(/[“”"']/g, "").split(",").join(", ")
+                    : null;
+                  const cleanAwayScorers = m.awayScorers && m.awayScorers !== "null"
+                    ? m.awayScorers.replace(/[{}]/g, "").replace(/[“”"']/g, "").split(",").join(", ")
+                    : null;
+
+                  return (
+                    <div
+                      key={m.id}
+                      className="glass-panel border border-border rounded-2xl p-5 bg-slate-955/40 hover:border-primary/30 transition-all shadow-md hover:shadow-primary/5 group"
+                    >
+                      {/* Cabecera de la tarjeta: Etapa y Fecha */}
+                      <div className="flex justify-between items-center text-xs text-slate-400 border-b border-border/30 pb-3 mb-4 font-mono">
+                        <span className="bg-primary/10 border border-primary/20 text-primary px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                          {m.stage === "GROUPS" ? `Grupo ${m.group || ""}` : m.stage}
+                        </span>
+                        <span>{formattedDate}</span>
+                      </div>
+
+                      {/* Marcador principal */}
+                      <div className="grid grid-cols-7 items-center text-center">
+                        {/* Equipo Local */}
+                        <div className="col-span-2 flex flex-col items-center gap-1.5">
+                          {m.homeTeam?.flagUrl ? (
+                            <img
+                              src={m.homeTeam.flagUrl}
+                              alt={m.homeTeam.name}
+                              className="w-10 h-6 object-cover rounded-md shadow-sm border border-border/40"
+                            />
+                          ) : (
+                            <div className="w-10 h-6 bg-slate-800 rounded-md border border-border/40 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                              {m.homeTeam?.code || "LOC"}
+                            </div>
+                          )}
+                          <span className="font-extrabold text-sm text-slate-200 line-clamp-1 group-hover:text-primary transition-colors">
+                            {m.homeTeam?.name || m.homeTeamPlaceholder}
+                          </span>
+                        </div>
+
+                        {/* Goles Local */}
+                        <div className="col-span-1 text-2xl font-black text-white">
+                          {m.homeScore}
+                        </div>
+
+                        {/* Separador */}
+                        <div className="col-span-1 text-slate-500 font-mono text-sm uppercase tracking-widest font-black">
+                          VS
+                        </div>
+
+                        {/* Goles Visitante */}
+                        <div className="col-span-1 text-2xl font-black text-white">
+                          {m.awayScore}
+                        </div>
+
+                        {/* Equipo Visitante */}
+                        <div className="col-span-2 flex flex-col items-center gap-1.5">
+                          {m.awayTeam?.flagUrl ? (
+                            <img
+                              src={m.awayTeam.flagUrl}
+                              alt={m.awayTeam.name}
+                              className="w-10 h-6 object-cover rounded-md shadow-sm border border-border/40"
+                            />
+                          ) : (
+                            <div className="w-10 h-6 bg-slate-800 rounded-md border border-border/40 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                              {m.awayTeam?.code || "VIS"}
+                            </div>
+                          )}
+                          <span className="font-extrabold text-sm text-slate-200 line-clamp-1 group-hover:text-primary transition-colors">
+                            {m.awayTeam?.name || m.awayTeamPlaceholder}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Goleadores en la parte inferior */}
+                      {(cleanHomeScorers || cleanAwayScorers) && (
+                        <div className="mt-5 pt-3 border-t border-border/20 grid grid-cols-2 gap-4 text-left">
+                          <div className="text-[11px] text-slate-400 leading-relaxed min-w-0">
+                            {cleanHomeScorers && (
+                              <div className="flex items-start gap-1">
+                                <span className="text-slate-500 font-bold mt-0.5">⚽</span>
+                                <span className="italic truncate" title={cleanHomeScorers}>
+                                  {cleanHomeScorers}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-400 leading-relaxed text-right min-w-0">
+                            {cleanAwayScorers && (
+                              <div className="flex items-start justify-end gap-1">
+                                <span className="italic truncate" title={cleanAwayScorers}>
+                                  {cleanAwayScorers}
+                                </span>
+                                <span className="text-slate-500 font-bold mt-0.5">⚽</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Columna Derecha: Tabla de Goleadores del Mundial */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="glass-panel border border-border rounded-2xl p-6 bg-slate-900/10">
+              <h4 className="font-bold text-base mb-5 uppercase tracking-wider text-slate-200 border-b border-border/20 pb-2.5 flex items-center gap-2">
+                <Trophy className="w-4.5 h-4.5 text-gold" />
+                Tabla de Goleadores
+              </h4>
+
+              {scorers.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-sm">
+                  Aún no se han registrado goleadores en los partidos disputados.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {scorers.map((s, idx) => (
+                    <div
+                      key={s.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                        idx === 0
+                          ? "bg-gold/5 border-gold/25 shadow-lg shadow-gold/2"
+                          : "bg-slate-950/40 border-border/50 hover:border-slate-800"
+                      }`}
+                    >
+                      {/* Medalla o número de posición */}
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shadow-sm ${
+                          idx === 0
+                            ? "bg-gold text-slate-950"
+                            : idx === 1
+                            ? "bg-slate-300 text-slate-950"
+                            : idx === 2
+                            ? "bg-[#cd7f32] text-slate-950"
+                            : "bg-slate-900 text-slate-400"
+                        }`}
+                      >
+                        {idx + 1}
+                      </div>
+
+                      {/* Nombre y País */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="font-bold text-sm text-foreground truncate">{s.name}</span>
+                          <span className="text-sm font-black text-primary flex items-center gap-1 font-mono">
+                            {s.goals} {s.goals === 1 ? "Gol" : "Goles"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {s.team.flagUrl && (
+                            <img
+                              src={s.team.flagUrl}
+                              alt={s.team.name}
+                              className="w-4 h-2.5 object-cover rounded-[1px]"
+                            />
+                          )}
+                          <span className="text-xs text-slate-400 font-medium">
+                            {s.team.name}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

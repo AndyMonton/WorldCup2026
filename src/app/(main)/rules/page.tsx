@@ -55,13 +55,15 @@ export default async function RulesPage() {
       </div>
 
       {activeLeague ? (
-        <TransferAliasCard
-          alias={activeLeague.transferAlias}
-          amount={activeLeague.transferAmount}
-          leagueName={activeLeague.name}
-          transferAccountName={activeLeague.transferAccountName}
-          transferPhone={activeLeague.transferPhone}
-        />
+        activeLeague.requiresPayment && (
+          <TransferAliasCard
+            alias={activeLeague.transferAlias}
+            amount={activeLeague.transferAmount}
+            leagueName={activeLeague.name}
+            transferAccountName={activeLeague.transferAccountName}
+            transferPhone={activeLeague.transferPhone}
+          />
+        )
       ) : (
         <div className="glass-panel border border-amber-500/20 bg-amber-500/5 rounded-2xl p-6 shadow-lg text-center flex flex-col items-center justify-center gap-3">
           <div className="p-3 bg-amber-500/10 rounded-full text-amber-400">

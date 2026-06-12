@@ -48,12 +48,14 @@ export async function recalculateUserLeagueMemberships(tx: any, userId: string) 
   // Obtener todas las membresías del usuario
   const memberships = await tx.leagueMembership.findMany({
     where: { userId },
+    include: { league: true },
   });
 
   for (const membership of memberships) {
-    const finalPhase1 = membership.activePhase1 ? pointsPhase1 : 0;
-    const finalPhase2 = membership.activePhase2 ? pointsPhase2 : 0;
-    const finalPhase3 = membership.activePhase3 ? pointsPhase3 : 0;
+    const isPaymentRequired = membership.league.requiresPayment;
+    const finalPhase1 = (!isPaymentRequired || membership.activePhase1) ? pointsPhase1 : 0;
+    const finalPhase2 = (!isPaymentRequired || membership.activePhase2) ? pointsPhase2 : 0;
+    const finalPhase3 = (!isPaymentRequired || membership.activePhase3) ? pointsPhase3 : 0;
     const finalPoints = finalPhase1 + finalPhase2 + finalPhase3 + bpPoints;
 
     // Calcular estadísticas (exactCount, etc.) solo de fases activas
@@ -66,11 +68,11 @@ export async function recalculateUserLeagueMemberships(tx: any, userId: string) 
     for (const p of allUserPredictions) {
       let isPhaseActive = false;
       if (p.match.stage === MatchStage.GROUPS) {
-        isPhaseActive = membership.activePhase1;
+        isPhaseActive = !isPaymentRequired || membership.activePhase1;
       } else if (p.match.stage === MatchStage.ROUND_32 || p.match.stage === MatchStage.ROUND_16) {
-        isPhaseActive = membership.activePhase2;
+        isPhaseActive = !isPaymentRequired || membership.activePhase2;
       } else {
-        isPhaseActive = membership.activePhase3;
+        isPhaseActive = !isPaymentRequired || membership.activePhase3;
       }
 
       if (isPhaseActive) {
@@ -112,7 +114,9 @@ export async function saveMatchResult(
   homeScorePenalties: number | null = null,
   awayScorePenalties: number | null = null,
   winnerId: string | null = null,
-  status: MatchStatus = MatchStatus.FINISHED
+  status: MatchStatus = MatchStatus.FINISHED,
+  homeScorers: string | null = null,
+  awayScorers: string | null = null
 ) {
   try {
     const session = await auth();
@@ -143,6 +147,8 @@ export async function saveMatchResult(
           awayScorePenalties,
           winnerId,
           status,
+          homeScorers,
+          awayScorers,
         },
       });
 
@@ -189,12 +195,15 @@ export async function saveMatchResult(
         await recalculateUserLeagueMemberships(tx, uId);
       }
 
+      // e. Recalcular goleadores
+      await recalculateGoalscorers(tx);
+
       // Guardar log de auditoría
       await tx.auditLog.create({
         data: {
           userId: session.user.id,
           action: "SAVE_MATCH_RESULT",
-          details: `Marcador guardado para partido ID ${matchId}: ${homeScore}-${awayScore}. Puntos recalculados.`,
+          details: `Marcador guardado para partido ID ${matchId}: ${homeScore}-${awayScore}. Goleadores y puntos recalculados.`,
         },
       });
     });
@@ -604,7 +613,8 @@ export async function updateLeagueTransferInfo(
   transferAlias: string,
   transferAmount: number | null,
   transferAccountName: string | null,
-  transferPhone: string | null
+  transferPhone: string | null,
+  requiresPayment: boolean = true
 ) {
   try {
     const session = await auth();
@@ -615,26 +625,49 @@ export async function updateLeagueTransferInfo(
     const accountName = transferAccountName ? transferAccountName.trim().substring(0, 200) : null;
     const phone = transferPhone ? transferPhone.trim().substring(0, 25) : null;
 
-    await prisma.league.update({
-      where: { id: leagueId },
-      data: {
-        transferAlias: transferAlias.trim() || null,
-        transferAmount: transferAmount !== null && !isNaN(transferAmount) ? transferAmount : null,
-        transferAccountName: accountName,
-        transferPhone: phone,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      // 1. Obtener la liga actual para ver si cambió requiresPayment
+      const currentLeague = await tx.league.findUnique({
+        where: { id: leagueId },
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: "UPDATE_LEAGUE_TRANSFER_INFO",
-        details: `Información de transferencia de liga ID ${leagueId} actualizada. Alias: ${transferAlias.trim() || 'Ninguno'}. Importe: ${transferAmount || 'Ninguno'}. Titular: ${accountName || 'Ninguno'}. Tel: ${phone || 'Ninguno'}.`,
-      },
+      // 2. Actualizar liga
+      await tx.league.update({
+        where: { id: leagueId },
+        data: {
+          transferAlias: transferAlias.trim() || null,
+          transferAmount: transferAmount !== null && !isNaN(transferAmount) ? transferAmount : null,
+          transferAccountName: accountName,
+          transferPhone: phone,
+          requiresPayment,
+        },
+      });
+
+      // 3. Si cambió requiresPayment, recalculamos todos los miembros
+      if (currentLeague && currentLeague.requiresPayment !== requiresPayment) {
+        const memberships = await tx.leagueMembership.findMany({
+          where: { leagueId },
+        });
+        for (const m of memberships) {
+          await recalculateUserLeagueMemberships(tx, m.userId);
+        }
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "UPDATE_LEAGUE_TRANSFER_INFO",
+          details: `Información de transferencia de liga ID ${leagueId} actualizada. Alias: ${transferAlias.trim() || 'Ninguno'}. Importe: ${transferAmount || 'Ninguno'}. Titular: ${accountName || 'Ninguno'}. Tel: ${phone || 'Ninguno'}. Requiere pago: ${requiresPayment ? "SI" : "NO"}.`,
+        },
+      });
     });
 
     revalidatePath("/admin");
     revalidatePath("/rules");
+    revalidatePath("/dashboard");
+    revalidatePath("/ranking");
+    revalidatePath("/predictions");
+    revalidatePath("/collaborator");
     return { success: true, error: null };
   } catch (error: any) {
     console.error("Error al actualizar info de transferencia de liga:", error);
@@ -838,6 +871,149 @@ export async function updateLeagueName(leagueId: string, newName: string) {
   } catch (error: any) {
     console.error("Error al actualizar nombre de la liga:", error);
     return { success: false, error: "Ocurrió un error inesperado al actualizar el nombre." };
+  }
+}
+
+export async function updateLeaguePaymentRequirement(leagueId: string, requiresPayment: boolean) {
+  try {
+    const session = await auth();
+    if (!session || session.user?.role !== "ADMIN") {
+      return { success: false, error: "Acceso denegado. Se requieren permisos de administrador." };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Actualizar liga
+      await tx.league.update({
+        where: { id: leagueId },
+        data: { requiresPayment },
+      });
+
+      // 2. Obtener miembros
+      const memberships = await tx.leagueMembership.findMany({
+        where: { leagueId },
+      });
+
+      // 3. Recalcular
+      for (const m of memberships) {
+        await recalculateUserLeagueMemberships(tx, m.userId);
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "UPDATE_LEAGUE_PAYMENT_REQUIREMENT",
+          details: `Requisito de pago para liga ID ${leagueId} actualizado a: ${requiresPayment ? "SI" : "NO"}.`,
+        },
+      });
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/dashboard");
+    revalidatePath("/ranking");
+    revalidatePath("/rules");
+    revalidatePath("/predictions");
+    revalidatePath("/collaborator");
+
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error("Error al actualizar requisito de pago de la liga:", error);
+    return { success: false, error: "Ocurrió un error inesperado al actualizar el requisito de pago." };
+  }
+}
+
+/**
+ * Parsea la cadena de texto de goleadores devuelta por la API (ej: "{“J. Quiñones 9'”,”R. Jiménez 67'”}")
+ * y devuelve un array con los nombres y cantidad de goles de cada jugador.
+ */
+function parseScorersString(scorersStr: string | null): { name: string; goals: number }[] {
+  if (!scorersStr || scorersStr === "null" || scorersStr.trim() === "") {
+    return [];
+  }
+
+  let clean = scorersStr.replace(/[{}]/g, "");
+  clean = clean.replace(/[“”"']/g, "");
+
+  const parts = clean.split(",");
+  const scorersMap: Record<string, number> = {};
+
+  let lastPlayerName = "";
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    const hasLetters = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(trimmed);
+
+    if (hasLetters) {
+      const match = trimmed.match(/^([^0-9]+)/);
+      if (match) {
+        const name = match[1].trim();
+        const digitMatches = trimmed.match(/\d+/g);
+        const goalsCount = digitMatches ? digitMatches.length : 1;
+
+        scorersMap[name] = (scorersMap[name] || 0) + goalsCount;
+        lastPlayerName = name;
+      }
+    } else {
+      if (lastPlayerName) {
+        const digitMatches = trimmed.match(/\d+/g);
+        const goalsCount = digitMatches ? digitMatches.length : 1;
+        scorersMap[lastPlayerName] = (scorersMap[lastPlayerName] || 0) + goalsCount;
+      }
+    }
+  }
+
+  return Object.entries(scorersMap).map(([name, goals]) => ({ name, goals }));
+}
+
+/**
+ * Limpia y recalcula por completo la tabla de goleadores (Scorer) a partir de los
+ * partidos finalizados y sus campos de goleadores.
+ */
+export async function recalculateGoalscorers(tx: any) {
+  // 1. Limpiar todos los goleadores actuales
+  await tx.scorer.deleteMany();
+
+  // 2. Obtener todos los partidos finalizados
+  const finishedMatches = await tx.match.findMany({
+    where: { status: MatchStatus.FINISHED },
+  });
+
+  const scorersMap: Record<string, { teamId: string; goals: number }> = {};
+
+  for (const match of finishedMatches) {
+    if (match.homeTeamId && match.homeScorers) {
+      const parsedHome = parseScorersString(match.homeScorers);
+      for (const p of parsedHome) {
+        const key = `${p.name}_${match.homeTeamId}`;
+        if (!scorersMap[key]) {
+          scorersMap[key] = { teamId: match.homeTeamId, goals: 0 };
+        }
+        scorersMap[key].goals += p.goals;
+      }
+    }
+    if (match.awayTeamId && match.awayScorers) {
+      const parsedAway = parseScorersString(match.awayScorers);
+      for (const p of parsedAway) {
+        const key = `${p.name}_${match.awayTeamId}`;
+        if (!scorersMap[key]) {
+          scorersMap[key] = { teamId: match.awayTeamId, goals: 0 };
+        }
+        scorersMap[key].goals += p.goals;
+      }
+    }
+  }
+
+  // 3. Crear los registros en la tabla Scorer
+  for (const [key, val] of Object.entries(scorersMap)) {
+    const name = key.substring(0, key.lastIndexOf("_"));
+    await tx.scorer.create({
+      data: {
+        name,
+        teamId: val.teamId,
+        goals: val.goals,
+      },
+    });
   }
 }
 

@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
-import { saveMatchResult, recalculateUserLeagueMemberships } from "@/app/actions/admin";
-import { MatchStatus } from "@prisma/client";
+import { recalculateUserLeagueMemberships, recalculateGoalscorers } from "@/app/actions/admin";
+import { MatchStatus, MatchStage, Role } from "@prisma/client";
 import { calculateScore } from "./scoring";
+import https from "https";
 
 // Diccionario de traducción de nombres de equipos de openfootball/FIFA a códigos FIFA de nuestro prode
 const TEAM_NAME_TO_CODE: Record<string, string> = {
@@ -57,7 +58,7 @@ const TEAM_NAME_TO_CODE: Record<string, string> = {
   "Jordan": "JOR", "Jordania": "JOR",
   // Grupo K
   "Portugal": "POR",
-  "DR Congo": "COD", "RD del Congo": "COD", "Congo DR": "COD",
+  "DR Congo": "COD", "RD del Congo": "COD", "Congo DR": "COD", "Democratic Republic of the Congo": "COD",
   "Uzbekistan": "UZB", "Uzbekistán": "UZB",
   "Colombia": "COL",
   // Grupo L
@@ -86,58 +87,38 @@ interface OpenFootballResponse {
 }
 
 /**
- * Plan A: Scraper de la Web de la FIFA.
- * Simulado por el momento para evitar fallos de CORS/certificados y bloqueos de IP en Next.js.
+ * Realiza una petición HTTPS ignorando errores de certificados SSL auto-firmados o de revocación.
  */
-async function fetchFIFAOfficialResults(): Promise<any[]> {
-  console.log("[Scraping FIFA] Iniciando consulta simulada a FIFA...");
-  // FIFA usualmente carga sus marcadores dinámicamente mediante WebSockets o un API interna de JSON.
-  // Un scraper básico de HTML es frágil. En un entorno real se consultaría una ruta de API específica de la FIFA.
-  // Para propósitos del proyecto, si falla o no está implementado, lanzamos un error para activar el Plan B.
-  throw new Error("El scraper de la FIFA HTML no está disponible o requiere Javascript (Puppeteer). Redirigiendo a Plan B.");
-}
-
-/**
- * Plan B: Cargar resultados desde los JSON públicos de OpenFootball en GitHub.
- */
-async function fetchOpenFootballResults(): Promise<any[]> {
-  console.log("[OpenFootball] Iniciando descarga de fixture y resultados...");
-  // URL del repositorio worldcup.json de openfootball
-  // https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json
-  // Dado que el Mundial 2026 aún no ha sucedido, usaremos un mock o una llamada real.
-  const url = "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
-  
-  const response = await fetch(url, {
-    method: "GET",
-    next: { revalidate: 300 }, // Caché de 5 minutos en Next.js
-  });
-
-  if (!response.ok) {
-    throw new Error(`Fallo al descargar JSON de OpenFootball. HTTP Status: ${response.status}`);
-  }
-
-  const json = (await response.json()) as OpenFootballResponse;
-  
-  // Aplanar los partidos del JSON (puede venir en rounds o como array plano de matches)
-  let matches: OpenFootballMatch[] = [];
-  
-  if (json.matches) {
-    matches = json.matches;
-  } else if (json.rounds) {
-    json.rounds.forEach((round) => {
-      if (round.matches) {
-        matches.push(...round.matches);
+function fetchJsonHttps(url: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const options = {
+      rejectUnauthorized: false, // Ignorar errores de certificado y revocación
+    };
+    https.get(url, options, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`Fallo HTTP Status: ${res.statusCode}`));
+        return;
       }
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on("error", (err) => {
+      reject(err);
     });
-  }
-
-  console.log(`[OpenFootball] Descargados ${matches.length} partidos. Iniciando procesamiento...`);
-  return matches;
+  });
 }
 
 /**
  * Ejecuta el proceso de actualización automatizada de resultados.
- * Intenta Plan A -> Cae a Plan B en caso de fallo.
+ * Consulta el API real en https://worldcup26.ir/get/games.
  */
 export async function runAutomatedResultsUpdate() {
   const summary: { updatedCount: number; matches: string[]; errors: string[] } = {
@@ -147,114 +128,83 @@ export async function runAutomatedResultsUpdate() {
   };
 
   let scrapedMatches: any[] = [];
-  let planUsed = "Ninguno";
+  const planUsed = "API Real (worldcup26.ir)";
 
-  // Intentar Plan A: FIFA
   try {
-    scrapedMatches = await fetchFIFAOfficialResults();
-    planUsed = "Plan A (FIFA Scraping)";
-  } catch (errorFIFA: any) {
-    console.warn("[Scraper FIFA] Falló Plan A, iniciando Plan B (OpenFootball)... Motivo:", errorFIFA.message);
-    
-    // Intentar Plan B: OpenFootball
-    try {
-      scrapedMatches = await fetchOpenFootballResults();
-      planUsed = "Plan B (OpenFootball JSON)";
-    } catch (errorOF: any) {
-      console.error("[Loader Resultados] Fallaron ambos planes automáticos.");
-      throw new Error(`Fallo en automatización. FIFA: ${errorFIFA.message}. OpenFootball: ${errorOF.message}`);
-    }
+    console.log("[Actualizador] Consultando partidos finalizados desde la API real...");
+    const url = "https://worldcup26.ir/get/games";
+    const json = await fetchJsonHttps(url);
+    scrapedMatches = json.games || [];
+    console.log(`[Actualizador] Descargados ${scrapedMatches.length} partidos.`);
+  } catch (error: any) {
+    console.error("[Loader Resultados] Falló la descarga de partidos de la API:", error.message);
+    throw new Error(`Fallo en automatización. API error: ${error.message}`);
   }
 
-  // Si llegamos aquí, tenemos partidos descargados
-  console.log(`[Actualizador] Procesando partidos con ${planUsed}...`);
-
   for (const m of scrapedMatches) {
-    // Solo nos interesan partidos que tengan un marcador final
-    if (!m.score || !m.score.ft) continue;
+    // Solo procesar si el partido ha finalizado según la API
+    const isFinished = m.finished === "TRUE" || m.finished === true || m.time_elapsed === "finished";
+    if (!isFinished) continue;
 
-    const homeCode = TEAM_NAME_TO_CODE[m.team1];
-    const awayCode = TEAM_NAME_TO_CODE[m.team2];
+    const homeCode = TEAM_NAME_TO_CODE[m.home_team_name_en];
+    const awayCode = TEAM_NAME_TO_CODE[m.away_team_name_en];
 
     if (!homeCode || !awayCode) {
-      // Ignorar o loguear equipos no reconocidos
-      continue;
+      continue; // Ignorar si no mapea o si son placeholders en playoffs
     }
 
     try {
-      // Buscar el partido en nuestra base de datos que coincida con estos códigos
+      // Buscar el partido en nuestra base de datos que coincida con estos códigos y no esté marcado como FINISHED
       const dbMatch = await prisma.match.findFirst({
         where: {
           homeTeam: { code: homeCode },
           awayTeam: { code: awayCode },
-          status: { not: MatchStatus.FINISHED }, // Solo actualizar los que no estén ya finalizados
+          status: { not: MatchStatus.FINISHED },
         },
         include: { homeTeam: true, awayTeam: true },
       });
 
       if (!dbMatch) {
-        // El partido no existe en el fixture o ya está finalizado
-        continue;
+        continue; // El partido no existe en el fixture o ya está finalizado
       }
 
-      // Marcadores en 90 min
-      const homeScore = m.score.ft[0];
-      const awayScore = m.score.ft[1];
+      const homeScore = parseInt(m.home_score);
+      const awayScore = parseInt(m.away_score);
+      
+      const homeScorers = m.home_scorers === "null" || !m.home_scorers ? null : m.home_scorers;
+      const awayScorers = m.away_scorers === "null" || !m.away_scorers ? null : m.away_scorers;
 
-      // Prórroga
-      let homeScoreExtra = null;
-      let awayScoreExtra = null;
-      if (m.score.et) {
-        homeScoreExtra = m.score.et[0];
-        awayScoreExtra = m.score.et[1];
-      }
-
-      // Penales
-      let homeScorePenalties = null;
-      let awayScorePenalties = null;
-      if (m.score.p) {
-        homeScorePenalties = m.score.p[0];
-        awayScorePenalties = m.score.p[1];
-      }
-
-      // Clasificado
+      // Ganador en eliminatorias directas (playoffs)
       let winnerId = null;
-      if (dbMatch.stage !== "GROUPS") {
+      if (dbMatch.stage !== MatchStage.GROUPS) {
         if (homeScore > awayScore) {
           winnerId = dbMatch.homeTeamId;
         } else if (awayScore > homeScore) {
           winnerId = dbMatch.awayTeamId;
-        } else if (homeScoreExtra !== null && awayScoreExtra !== null && homeScoreExtra !== awayScoreExtra) {
-          winnerId = homeScoreExtra > awayScoreExtra ? dbMatch.homeTeamId : dbMatch.awayTeamId;
-        } else if (homeScorePenalties !== null && awayScorePenalties !== null) {
-          winnerId = homeScorePenalties > awayScorePenalties ? dbMatch.homeTeamId : dbMatch.awayTeamId;
         }
+        // Nota: en caso de empate en playoffs, el API informará la resolución
+        // (por ejemplo sumando goles en el global o mostrando la definición).
+        // Si sigue empatado y no se determina por goles ordinarios, winnerId quedará como null
+        // a la espera de resolución manual por el administrador.
       }
 
       console.log(`[Actualizador] Actualizando: ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name} -> Resultado: ${homeScore}-${awayScore}`);
 
-      // Llamar al action de guardar marcador (que internamente recalcula puntos y rankings en una transacción)
-      // Como estamos llamando a saveMatchResult desde una tarea del sistema, necesitamos saltar la validación de admin.
-      // Escribiremos la lógica directamente usando el prisma client en lugar de llamar a saveMatchResult
-      // para evitar el chequeo de "session.user.role === ADMIN" que fallaría en una ruta cron desatendida.
-      
       await prisma.$transaction(async (tx) => {
-        // Actualizar el partido
+        // 1. Actualizar el partido
         const updatedMatch = await tx.match.update({
           where: { id: dbMatch.id },
           data: {
             homeScore,
             awayScore,
-            homeScoreExtra,
-            awayScoreExtra,
-            homeScorePenalties,
-            awayScorePenalties,
+            homeScorers,
+            awayScorers,
             winnerId,
             status: MatchStatus.FINISHED,
           },
         });
 
-        // Recalcular predicciones del partido
+        // 2. Recalcular predicciones del partido
         const predictions = await tx.prediction.findMany({
           where: { matchId: dbMatch.id },
         });
@@ -288,20 +238,22 @@ export async function runAutomatedResultsUpdate() {
           });
         }
 
-        // Actualizar caché de puntajes
+        // 3. Actualizar caché de puntajes de los usuarios
         const userIds = Array.from(new Set(predictions.map((p) => p.userId)));
-
         for (const uId of userIds) {
           await recalculateUserLeagueMemberships(tx, uId);
         }
 
-        // Log auditoría de sistema
-        const systemAdmin = await tx.user.findFirst({ where: { role: "ADMIN" } });
+        // 4. Recalcular goleadores
+        await recalculateGoalscorers(tx);
+
+        // 5. Log auditoría de sistema
+        const systemAdmin = await tx.user.findFirst({ where: { role: Role.ADMIN } });
         await tx.auditLog.create({
           data: {
             userId: systemAdmin?.id || "SYSTEM",
             action: "AUTOMATED_RESULTS_UPDATE",
-            details: `Resultados cargados automáticamente vía ${planUsed} para ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name}.`,
+            details: `Resultados y goleadores cargados automáticamente vía ${planUsed} para ${dbMatch.homeTeam?.name} vs ${dbMatch.awayTeam?.name}.`,
           },
         });
       });
@@ -311,7 +263,7 @@ export async function runAutomatedResultsUpdate() {
 
     } catch (err: any) {
       console.error(`Error al procesar el partido:`, err);
-      summary.errors.push(`Error en partido ${m.team1} vs ${m.team2}: ${err.message}`);
+      summary.errors.push(`Error en partido ${m.home_team_name_en} vs ${m.away_team_name_en}: ${err.message}`);
     }
   }
 

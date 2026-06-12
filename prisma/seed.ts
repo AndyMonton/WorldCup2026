@@ -16,8 +16,9 @@ async function main() {
   console.log("Iniciando la siembra de la base de datos (Seed)...");
 
   console.log("Limpiando predicciones y partidos existentes...");
-  await prisma.prediction.deleteMany();
-  await prisma.match.deleteMany();
+  // WARNING: Estas líneas borraban las predicciones de los usuarios! Han sido comentadas por seguridad.
+  // await prisma.prediction.deleteMany();
+  // await prisma.match.deleteMany();
 
   // 1. Reglas de Puntuación (ScoringRules)
   console.log("Sembrando reglas de puntuación...");
@@ -199,7 +200,7 @@ async function main() {
         case "A": return { dayDelta: 0, hour: 23 }; // KOR vs CZE: Jun 11, 23:00
         case "B": return { dayDelta: 2, hour: 16 }; // QAT vs SUI: Jun 13, 16:00
         case "C": return { dayDelta: 2, hour: 22 }; // HAI vs SCO: Jun 13, 22:00
-        case "D": return { dayDelta: 1, hour: 23 }; // AUS vs TUR: Jun 12, 23:00
+        case "D": return { dayDelta: 3, hour: 23 }; // AUS vs TUR: Jun 14, 23:00
         case "E": return { dayDelta: 3, hour: 20 }; // CIV vs ECU: Jun 14, 20:00
         case "F": return { dayDelta: 3, hour: 23 }; // SWE vs TUN: Jun 14, 23:00
         case "G": return { dayDelta: 4, hour: 22 }; // IRN vs NZL: Jun 15, 22:00

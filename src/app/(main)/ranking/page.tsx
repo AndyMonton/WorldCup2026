@@ -79,6 +79,7 @@ export default async function RankingPage() {
 
     const activeLeague = dbMemberships[0]?.league || null;
     const transferAmount = activeLeague?.transferAmount || null;
+    const requiresPayment = activeLeague?.requiresPayment ?? true;
 
     members = dbMemberships.map((m) => ({
       id: m.userId,
@@ -121,6 +122,7 @@ export default async function RankingPage() {
         currentUserId={currentUserId}
         isDemo={false}
         transferAmount={transferAmount}
+        requiresPayment={requiresPayment}
         currentTournamentPhase={currentTournamentPhase}
       />
     );
@@ -135,6 +137,7 @@ export default async function RankingPage() {
       currentUserId={currentUserId}
       isDemo={isDemo}
       transferAmount={null}
+      requiresPayment={true}
       currentTournamentPhase={1}
     />
   );

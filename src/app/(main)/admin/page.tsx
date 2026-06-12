@@ -6,9 +6,9 @@ import { MatchStage, MatchStatus, Role } from "@prisma/client";
 
 // Mock data en caso de que falle la base de datos (Modo Demostración)
 const mockLeagues = [
-  { id: "l1", name: "Macena SA", inviteCode: "MACENA2026", membershipsCount: 48, transferAlias: "macena.mercado.pago", transferAmount: 5000, transferAccountName: null, transferPhone: null, createdAt: new Date(), updatedAt: new Date() },
-  { id: "l2", name: "Club Deportivo", inviteCode: "CLUB2026", membershipsCount: 12, transferAlias: "club.dep.transfer", transferAmount: 3000, transferAccountName: null, transferPhone: null, createdAt: new Date(), updatedAt: new Date() },
-  { id: "l3", name: "Amigos del Gym", inviteCode: "GYM2026", membershipsCount: 5, transferAlias: null, transferAmount: null, transferAccountName: null, transferPhone: null, createdAt: new Date(), updatedAt: new Date() },
+  { id: "l1", name: "Macena SA", inviteCode: "MACENA2026", membershipsCount: 48, transferAlias: "macena.mercado.pago", transferAmount: 5000, transferAccountName: null, transferPhone: null, requiresPayment: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: "l2", name: "Club Deportivo", inviteCode: "CLUB2026", membershipsCount: 12, transferAlias: "club.dep.transfer", transferAmount: 3000, transferAccountName: null, transferPhone: null, requiresPayment: true, createdAt: new Date(), updatedAt: new Date() },
+  { id: "l3", name: "Amigos del Gym", inviteCode: "GYM2026", membershipsCount: 5, transferAlias: null, transferAmount: null, transferAccountName: null, transferPhone: null, requiresPayment: false, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 const mockUsers = [
@@ -265,6 +265,7 @@ export default async function AdminPage() {
       name: l.name,
       inviteCode: l.inviteCode,
       departments: l.departments,
+      requiresPayment: l.requiresPayment,
       transferAlias: l.transferAlias,
       transferAmount: l.transferAmount,
       transferAccountName: l.transferAccountName,

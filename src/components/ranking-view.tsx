@@ -27,6 +27,7 @@ interface RankingViewProps {
   currentUserId?: string;
   isDemo: boolean;
   transferAmount: number | null;
+  requiresPayment?: boolean;
   currentTournamentPhase: 1 | 2 | 3;
 }
 
@@ -37,6 +38,7 @@ export function RankingView({
   currentUserId,
   isDemo,
   transferAmount,
+  requiresPayment = true,
   currentTournamentPhase,
 }: RankingViewProps) {
   const [activePhase, setActivePhase] = useState<PhaseTab>("accumulated");
@@ -51,6 +53,7 @@ export function RankingView({
 
   // Calcular pozo acumulado para la fase activa del torneo
   const paidCount = members.filter((m) => {
+    if (!requiresPayment) return true;
     if (currentTournamentPhase === 1) return m.activePhase1;
     if (currentTournamentPhase === 2) return m.activePhase2;
     return m.activePhase3;
@@ -86,6 +89,7 @@ export function RankingView({
       }
       // Filtro Habilitados
       if (filterType === "habilitados") {
+        if (!requiresPayment) return true;
         if (currentTournamentPhase === 1) return m.activePhase1;
         if (currentTournamentPhase === 2) return m.activePhase2;
         if (currentTournamentPhase === 3) return m.activePhase3;
@@ -160,7 +164,7 @@ export function RankingView({
       </div>
 
       {/* Pozo Acumulado Card */}
-      {transferAmount !== null && (
+      {requiresPayment && transferAmount !== null && (
         <div className="glass-panel border-2 border-primary/30 rounded-2xl p-5 bg-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg relative overflow-hidden">
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
           <div className="flex items-center gap-3.5 z-10 w-full sm:w-auto text-left">
@@ -288,28 +292,30 @@ export function RankingView({
         </div>
 
         {/* Filtro Todos vs Habilitados */}
-        <div className="flex bg-slate-950/80 border border-border p-1 rounded-xl justify-self-end w-full md:w-auto">
-          <button
-            onClick={() => setFilterType("all")}
-            className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              filterType === "all"
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-slate-400 hover:text-foreground"
-            }`}
-          >
-            Todos
-          </button>
-          <button
-            onClick={() => setFilterType("habilitados")}
-            className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              filterType === "habilitados"
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-slate-400 hover:text-foreground"
-            }`}
-          >
-            Habilitados
-          </button>
-        </div>
+        {requiresPayment && (
+          <div className="flex bg-slate-950/80 border border-border p-1 rounded-xl justify-self-end w-full md:w-auto">
+            <button
+              onClick={() => setFilterType("all")}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                filterType === "all"
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-slate-400 hover:text-foreground"
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilterType("habilitados")}
+              className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                filterType === "habilitados"
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-slate-400 hover:text-foreground"
+              }`}
+            >
+              Habilitados
+            </button>
+          </div>
+        )}
       </div>
 
       {/* --- EL PODIO DE LA FASE ACTIVA --- */}

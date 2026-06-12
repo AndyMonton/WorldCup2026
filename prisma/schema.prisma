@@ -92,6 +92,7 @@ model League {
   name           String
   inviteCode     String             @unique
   departments    String?            // JSON string array of sectors/departments
+  requiresPayment     Boolean            @default(true)
   transferAlias       String?
   transferAmount      Float?
   transferAccountName String?
@@ -149,6 +150,7 @@ model Team {
   awayMatches          Match[]                     @relation("AwayTeam")
   championPredictions  TournamentBonusPrediction[] @relation("ChampionTeam")
   runnerUpPredictions  TournamentBonusPrediction[] @relation("RunnerUpTeam")
+  scorers              Scorer[]
   createdAt            DateTime                    @default(now())
   updatedAt            DateTime                    @updatedAt
 }
@@ -178,6 +180,9 @@ model Match {
   
   homeScorePenalties  Int? // Goles en tanda de penales
   awayScorePenalties  Int? // Goles en tanda de penales
+  
+  homeScorers         String? // Goleadores del equipo local
+  awayScorers         String? // Goleadores del equipo visitante
   
   winnerId            String? // ID del equipo clasificado / ganador final del partido
   
@@ -260,4 +265,16 @@ model AuditLog {
   details   String // JSON o descripción
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Scorer {
+  id        String   @id @default(uuid())
+  name      String
+  teamId    String
+  goals     Int      @default(0)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, teamId])
 }

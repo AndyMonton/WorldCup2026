@@ -29,6 +29,7 @@ interface CollaboratorViewProps {
   initialMembers: MemberItem[];
   phase1Finished?: boolean;
   phase2Finished?: boolean;
+  requiresPayment?: boolean;
 }
 
 export function CollaboratorView({ 
@@ -36,7 +37,8 @@ export function CollaboratorView({
   leagueName, 
   initialMembers,
   phase1Finished = false,
-  phase2Finished = false
+  phase2Finished = false,
+  requiresPayment = true
 }: CollaboratorViewProps) {
   const [members, setMembers] = useState<MemberItem[]>(initialMembers);
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,6 +138,22 @@ export function CollaboratorView({
         </div>
       </div>
 
+      {/* Alerta de Liga Gratuita (Sin requerimiento de Pago) */}
+      {!requiresPayment && (
+        <div className="glass-panel border border-emerald-500/20 bg-emerald-500/5 rounded-2xl p-5 shadow-lg flex items-center gap-3.5 relative overflow-hidden">
+          <div className="absolute -top-10 -left-10 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-foreground">Liga Gratuita (Sin Requisito de Pago)</h4>
+            <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+              Esta liga está configurada como gratuita. Todos los participantes están habilitados automáticamente en todas las fases del torneo, por lo que no es necesario gestionar los pagos ni habilitaciones aquí.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Tabla de Participantes */}
       <div className="glass-panel border border-border/80 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
@@ -192,8 +210,8 @@ export function CollaboratorView({
                       <td className="px-6 py-4 text-center">
                         <input
                           type="checkbox"
-                          checked={member.activePhase1}
-                          disabled={updatingPhaseMap[`${member.userId}-1`]}
+                          checked={!requiresPayment || member.activePhase1}
+                          disabled={!requiresPayment || updatingPhaseMap[`${member.userId}-1`]}
                           onChange={() => handleTogglePhase(member.userId, 1, member.activePhase1)}
                           className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-50"
                         />
@@ -203,8 +221,8 @@ export function CollaboratorView({
                       <td className="px-6 py-4 text-center" title={!phase1Finished ? "Se habilita al finalizar la Fase 1" : undefined}>
                         <input
                           type="checkbox"
-                          checked={member.activePhase2}
-                          disabled={!phase1Finished || updatingPhaseMap[`${member.userId}-2`]}
+                          checked={!requiresPayment || member.activePhase2}
+                          disabled={!requiresPayment || !phase1Finished || updatingPhaseMap[`${member.userId}-2`]}
                           onChange={() => handleTogglePhase(member.userId, 2, member.activePhase2)}
                           className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         />
@@ -214,8 +232,8 @@ export function CollaboratorView({
                       <td className="px-6 py-4 text-center" title={!phase2Finished ? "Se habilita al finalizar la Fase 2" : undefined}>
                         <input
                           type="checkbox"
-                          checked={member.activePhase3}
-                          disabled={!phase2Finished || updatingPhaseMap[`${member.userId}-3`]}
+                          checked={!requiresPayment || member.activePhase3}
+                          disabled={!requiresPayment || !phase2Finished || updatingPhaseMap[`${member.userId}-3`]}
                           onChange={() => handleTogglePhase(member.userId, 3, member.activePhase3)}
                           className="rounded border-border text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                         />

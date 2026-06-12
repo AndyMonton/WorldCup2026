@@ -67,7 +67,7 @@ interface UserItem {
  
 interface AdminViewProps {
   initialMatches: MatchItem[];
-  leagues: (League & { membershipsCount: number; departments: string | null; transferAlias: string | null; transferAmount: number | null })[];
+  leagues: (League & { membershipsCount: number; departments: string | null; transferAlias: string | null; transferAmount: number | null; requiresPayment: boolean })[];
   users: UserItem[];
   auditLogs: (AuditLog & { user: { name: string | null; email: string } })[];
   isDemo: boolean;
@@ -83,6 +83,7 @@ function LeagueTransferInfoCell({
   initialAmount,
   initialAccountName,
   initialPhone,
+  initialRequiresPayment,
   isDemo,
   onError,
 }: {
@@ -91,6 +92,7 @@ function LeagueTransferInfoCell({
   initialAmount: number | null;
   initialAccountName: string | null;
   initialPhone: string | null;
+  initialRequiresPayment: boolean;
   isDemo: boolean;
   onError?: (err: string) => void;
 }) {
@@ -98,6 +100,7 @@ function LeagueTransferInfoCell({
   const [amount, setAmount] = useState(initialAmount !== null ? initialAmount.toString() : "");
   const [accountName, setAccountName] = useState(initialAccountName || "");
   const [phone, setPhone] = useState(initialPhone || "");
+  const [requiresPayment, setRequiresPayment] = useState(initialRequiresPayment);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [, startTransition] = React.useTransition();
@@ -121,7 +124,8 @@ function LeagueTransferInfoCell({
         alias,
         parsedAmount,
         accountName,
-        phone
+        phone,
+        requiresPayment
       );
       setSaving(false);
       if (res.success) {
@@ -165,6 +169,15 @@ function LeagueTransferInfoCell({
           placeholder="Celular para comprobante"
           className="px-2 py-1 bg-slate-950 border border-border/60 focus:border-primary rounded-lg text-xs text-foreground placeholder-slate-600 outline-none w-24 transition-all"
         />
+        <label className="col-span-1 sm:col-span-2 flex items-center gap-2 mt-1 select-none cursor-pointer">
+          <input
+            type="checkbox"
+            checked={requiresPayment}
+            onChange={(e) => setRequiresPayment(e.target.checked)}
+            className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+          />
+          <span className="text-[10px] text-slate-300 font-semibold">Requiere pago de inscripción</span>
+        </label>
       </div>
       <button
         onClick={handleSave}
@@ -1379,6 +1392,7 @@ export function AdminView({
                           initialAmount={l.transferAmount}
                           initialAccountName={l.transferAccountName || ""}
                           initialPhone={l.transferPhone || ""}
+                          initialRequiresPayment={l.requiresPayment}
                           isDemo={isDemo}
                           onError={(err) => triggerAlert("Error al Guardar", err, "error")}
                         />

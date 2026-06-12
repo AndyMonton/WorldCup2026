@@ -198,9 +198,10 @@ export default async function PredictionsPage() {
     }
 
     if (membership) {
-      activePhase1 = membership.activePhase1;
-      activePhase2 = membership.activePhase2;
-      activePhase3 = membership.activePhase3;
+      const isPaymentRequired = membership.league.requiresPayment;
+      activePhase1 = !isPaymentRequired || membership.activePhase1;
+      activePhase2 = !isPaymentRequired || membership.activePhase2;
+      activePhase3 = !isPaymentRequired || membership.activePhase3;
 
       // Calcular ranking
       const betterPlayers = await prisma.leagueMembership.count({

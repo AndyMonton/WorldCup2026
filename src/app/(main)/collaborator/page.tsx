@@ -97,13 +97,16 @@ export default async function CollaboratorPage() {
     matches.filter(m => m.stage === "ROUND_32" || m.stage === "ROUND_16").every(m => m.status === "FINISHED" || m.homeScore !== null);
 
   let leagueName = "Mi Liga";
+  let requiresPayment = true;
   if (membership) {
     leagueName = membership.league.name;
+    requiresPayment = membership.league.requiresPayment;
   } else if (isGlobalAdmin) {
     const league = await prisma.league.findUnique({
       where: { id: activeLeagueId },
     });
     leagueName = league?.name || "Mi Liga";
+    requiresPayment = league?.requiresPayment ?? true;
   }
 
   // Formatear miembros para evitar problemas de serialización de Date
@@ -131,6 +134,7 @@ export default async function CollaboratorPage() {
       initialMembers={formattedMembers as any}
       phase1Finished={phase1Finished}
       phase2Finished={phase2Finished}
+      requiresPayment={requiresPayment}
     />
   );
 }

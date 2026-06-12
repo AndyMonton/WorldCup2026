@@ -617,7 +617,7 @@ export function AppLayout({ children, memberships = [] }: AppLayoutProps) {
 
         {/* --- NAVEGACIÓN INFERIOR PARA MÓVIL (TIPO APP MÓVIL) --- */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-card/90 backdrop-blur-lg border-t border-border flex justify-around items-center py-2 px-2 z-10">
-          {navigation.slice(0, 4).map((item) => {
+          {navigation.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
