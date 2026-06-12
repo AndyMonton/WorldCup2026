@@ -342,7 +342,7 @@ export function InfoMundialView({
   finishedMatches?: any[];
   scorers?: any[];
 }) {
-  const [activeTab, setActiveTab] = useState<"stadiums" | "history" | "trivia" | "results">("stadiums");
+  const [activeTab, setActiveTab] = useState<"stadiums" | "history" | "trivia" | "results">("results");
   const [selectedStadium, setSelectedStadium] = useState<Stadium | null>(null);
   const [stadiumFilter, setStadiumFilter] = useState<string>("ALL");
 
@@ -368,6 +368,18 @@ export function InfoMundialView({
 
       {/* Tabs */}
       <div className="flex border-b border-border/80 pb-px overflow-x-auto scrollbar-none whitespace-nowrap">
+        <button
+          onClick={() => setActiveTab("results")}
+          className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 outline-none cursor-pointer transition-all ${
+            activeTab === "results"
+              ? "border-primary text-primary font-bold bg-primary/5"
+              : "border-transparent text-slate-400 hover:text-foreground"
+          }`}
+        >
+          <Trophy className="w-4 h-4 text-primary" />
+          Todos los Resultados
+        </button>
+
         <button
           onClick={() => setActiveTab("stadiums")}
           className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 outline-none cursor-pointer transition-all ${
@@ -402,18 +414,6 @@ export function InfoMundialView({
         >
           <Sparkles className="w-4 h-4" />
           Datos y Curiosidades
-        </button>
-
-        <button
-          onClick={() => setActiveTab("results")}
-          className={`flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border-b-2 outline-none cursor-pointer transition-all ${
-            activeTab === "results"
-              ? "border-primary text-primary font-bold bg-primary/5"
-              : "border-transparent text-slate-400 hover:text-foreground"
-          }`}
-        >
-          <Trophy className="w-4 h-4 text-primary" />
-          Todos los Resultados
         </button>
       </div>
 
