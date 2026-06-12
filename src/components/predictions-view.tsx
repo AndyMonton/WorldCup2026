@@ -1926,7 +1926,7 @@ export function PredictionsView({
             : "flex md:hidden";
 
         return (
-          <div className={`fixed bottom-[57px] md:bottom-0 left-0 md:left-64 right-0 p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-30 flex-col gap-2 ${displayClass}`}>
+          <div className={`fixed bottom-[76px] md:bottom-0 left-3 md:left-64 right-3 md:right-0 p-4 bg-background/95 md:bg-background/90 backdrop-blur-md border border-border/50 md:border-t md:border-x-0 rounded-2xl md:rounded-none shadow-2xl md:shadow-none z-30 flex-col gap-2 ${displayClass}`}>
             {/* Mensaje de estado global */}
             {globalStatus.message && (
               <div className={`p-2.5 rounded-xl border text-center text-[10px] font-bold uppercase tracking-wider ${
@@ -1954,7 +1954,7 @@ export function PredictionsView({
                 disabled={savingBonus || !hasChanges}
                 className={`flex-1 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
                   !hasChanges
-                    ? "bg-slate-900/40 text-slate-400/30 border border-border/40 cursor-not-allowed opacity-50"
+                    ? "bg-slate-900/40 border border-border/20 text-slate-500 cursor-not-allowed"
                     : "bg-slate-900 hover:bg-slate-800 border border-border text-slate-300 cursor-pointer active:scale-[0.98]"
                 }`}
               >
@@ -1967,7 +1967,7 @@ export function PredictionsView({
                 disabled={savingBonus || !hasChanges}
                 className={`flex-1 font-black text-xs tracking-wider uppercase py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
                   !hasChanges
-                    ? "bg-primary/20 text-primary-foreground/30 cursor-not-allowed opacity-50"
+                    ? "bg-primary/10 border border-primary/20 text-primary/50 cursor-not-allowed"
                     : "bg-primary hover:bg-primary-hover text-primary-foreground cursor-pointer active:scale-[0.98]"
                 }`}
               >
