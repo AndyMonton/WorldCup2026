@@ -35,12 +35,39 @@ export async function savePrediction(
       return { success: false, error: "El partido ya comenzó o finalizó." };
     }
 
-    // El límite es 15 minutos antes del inicio del partido
-    const deadline = new Date(match.date.getTime() - 15 * 60 * 1000);
+    // El límite es 15 minutos antes del inicio del partido (excepto hoy 15/06/2026 que es hasta la hora del partido)
+    let offset = 15 * 60 * 1000;
+    try {
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      });
+      const parts = formatter.formatToParts(new Date());
+      const day = parts.find((p) => p.type === "day")?.value;
+      const month = parts.find((p) => p.type === "month")?.value;
+      const year = parts.find((p) => p.type === "year")?.value;
+      if (day && month && year) {
+        const isTodaySpecial =
+          parseInt(day, 10) === 15 &&
+          parseInt(month, 10) === 6 &&
+          parseInt(year, 10) === 2026;
+        if (isTodaySpecial) {
+          offset = 0;
+        }
+      }
+    } catch (e) {
+      console.error("Error checking date offset:", e);
+    }
+
+    const deadline = new Date(match.date.getTime() - offset);
     if (new Date() > deadline) {
       return {
         success: false,
-        error: "Los pronósticos para este partido están cerrados (límite de 15 minutos antes del partido).",
+        error: offset === 0 
+          ? "El partido ya comenzó." 
+          : "Los pronósticos para este partido están cerrados (límite de 15 minutos antes del partido).",
       };
     }
 

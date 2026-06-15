@@ -64,6 +64,31 @@ interface PredictionsViewProps {
 
 type TabType = "groups" | "playoffs-1" | "playoffs-2" | "bonus";
 
+const getBlockTimeOffset = () => {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const day = parts.find((p) => p.type === "day")?.value;
+    const month = parts.find((p) => p.type === "month")?.value;
+    const year = parts.find((p) => p.type === "year")?.value;
+    if (day && month && year) {
+      const isTodaySpecial =
+        parseInt(day, 10) === 15 &&
+        parseInt(month, 10) === 6 &&
+        parseInt(year, 10) === 2026;
+      return isTodaySpecial ? 0 : 15 * 60 * 1000;
+    }
+  } catch (e) {
+    console.error("Error checking date offset:", e);
+  }
+  return 15 * 60 * 1000;
+};
+
 export function PredictionsView({
   teams,
   matches,
@@ -168,7 +193,7 @@ export function PredictionsView({
         m.stage === "GROUPS" ? activePhase1 :
         (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
         activePhase3;
-      const blockTime = new Date(m.date.getTime() - 15 * 60 * 1000);
+      const blockTime = new Date(m.date.getTime() - getBlockTimeOffset());
       const isLocked = new Date() > blockTime;
       if (isLocked) continue;
 
@@ -254,7 +279,7 @@ export function PredictionsView({
   };
 
   const getMatchBadge = (match: MatchItem, hasPred: boolean, isPhaseActive: boolean = true) => {
-    const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
+    const blockTime = new Date(match.date.getTime() - getBlockTimeOffset());
     const isLocked = new Date() > blockTime;
 
     if (match.homeScore !== null && match.awayScore !== null) {
@@ -339,7 +364,7 @@ export function PredictionsView({
         m.stage === "GROUPS" ? activePhase1 :
         (m.stage === "ROUND_32" || m.stage === "ROUND_16") ? activePhase2 :
         activePhase3;
-      const blockTime = new Date(m.date.getTime() - 15 * 60 * 1000);
+      const blockTime = new Date(m.date.getTime() - getBlockTimeOffset());
       const isLocked = new Date() > blockTime;
       if (isLocked) return false;
 
@@ -864,7 +889,7 @@ export function PredictionsView({
                         match.stage === MatchStage.GROUPS ? activePhase1 :
                         (match.stage === MatchStage.ROUND_32 || match.stage === MatchStage.ROUND_16) ? activePhase2 :
                         activePhase3;
-                      const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
+                      const blockTime = new Date(match.date.getTime() - getBlockTimeOffset());
                       const isLocked = new Date() > blockTime;
                       const isLockedTime = new Date() > blockTime;
 
@@ -1510,7 +1535,7 @@ export function PredictionsView({
                       match.stage === MatchStage.GROUPS ? activePhase1 :
                       (match.stage === MatchStage.ROUND_32 || match.stage === MatchStage.ROUND_16) ? activePhase2 :
                       activePhase3;
-                    const blockTime = new Date(match.date.getTime() - 15 * 60 * 1000);
+                    const blockTime = new Date(match.date.getTime() - getBlockTimeOffset());
                     const isLocked = new Date() > blockTime;
 
                     const score = scores[match.id] || { home: "", away: "" };
