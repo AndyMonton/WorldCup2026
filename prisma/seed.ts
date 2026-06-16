@@ -189,8 +189,8 @@ async function main() {
         case "F": return { dayDelta: 3, hour: 17 }; // NED vs JPN: Jun 14, 17:00
         case "G": return { dayDelta: 4, hour: 16 }; // BEL vs EGY: Jun 15, 16:00
         case "H": return { dayDelta: 4, hour: 13 }; // ESP vs CPV: Jun 15, 13:00
-        case "I": return { dayDelta: 5, hour: 13 }; // FRA vs SEN: Jun 16, 13:00
-        case "J": return { dayDelta: 5, hour: 19 }; // AUT vs JOR: Jun 16, 19:00
+        case "I": return { dayDelta: 5, hour: 16 }; // FRA vs SEN: Jun 16, 16:00
+        case "J": return { dayDelta: 5, hour: 22 }; // ARG vs ALG: Jun 16, 22:00
         case "K": return { dayDelta: 6, hour: 14 }; // POR vs COD: Jun 17, 14:00
         case "L": return { dayDelta: 6, hour: 17 }; // ENG vs CRO: Jun 17, 17:00
       }
@@ -205,7 +205,7 @@ async function main() {
         case "F": return { dayDelta: 3, hour: 23 }; // SWE vs TUN: Jun 14, 23:00
         case "G": return { dayDelta: 4, hour: 22 }; // IRN vs NZL: Jun 15, 22:00
         case "H": return { dayDelta: 4, hour: 19 }; // KSA vs URU: Jun 15, 19:00
-        case "I": return { dayDelta: 5, hour: 16 }; // IRQ vs NOR: Jun 16, 16:00
+        case "I": return { dayDelta: 5, hour: 19 }; // IRQ vs NOR: Jun 16, 19:00
         case "J": return { dayDelta: 6, hour: 1 }; // AUT vs JOR: Jun 17, 01:00 (instead of Jun 16, 22:00)
         case "K": return { dayDelta: 6, hour: 23 }; // UZB vs COL: Jun 17, 23:00
         case "L": return { dayDelta: 6, hour: 20 }; // GHA vs PAN: Jun 17, 20:00

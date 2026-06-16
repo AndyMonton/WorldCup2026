@@ -936,6 +936,8 @@ export function InfoMundialView({
                     month: "long",
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZone: "America/Argentina/Buenos_Aires",
+                    hour12: false,
                   }) + " hs";
 
                   const cleanHomeScorers = m.homeScorers && m.homeScorers !== "null"
