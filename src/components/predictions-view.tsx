@@ -104,6 +104,15 @@ export function PredictionsView({
   const [groupFilter, setGroupFilter] = useState<string>("TODOS"); // Inicializado en TODOS por defecto en mobile/desktop
   const [statusFilter, setStatusFilter] = useState<string>("TODOS");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [onlyTodayFilter, setOnlyTodayFilter] = useState<boolean>(true);
+
+  const todayStr = useMemo(() => {
+    return new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      timeZone: "America/Argentina/Buenos_Aires"
+    });
+  }, []);
 
   const [mobileActiveTab, setMobileActiveTab] = useState<"groups" | "knockout" | "bonus">("groups");
   const [globalStatus, setGlobalStatus] = useState<{ type: "success" | "error" | "info" | null; message: string | null }>({ type: null, message: null });
@@ -243,6 +252,60 @@ export function PredictionsView({
       }
     }
   }, []);
+
+  // Sync matches prop updates with local state for matches that are not dirty (no unsaved changes) or just saved
+  useEffect(() => {
+    setScores((prev) => {
+      let changed = false;
+      const nextScores = { ...prev };
+      matches.forEach((m) => {
+        const serverHome = m.userPrediction?.homeScore.toString() ?? "";
+        const serverAway = m.userPrediction?.awayScore.toString() ?? "";
+
+        const local = prev[m.id];
+        if (!local) {
+          nextScores[m.id] = { home: serverHome, away: serverAway };
+          changed = true;
+        } else {
+          const isDirty =
+            local.home !== (m.userPrediction?.homeScore.toString() ?? "") ||
+            local.away !== (m.userPrediction?.awayScore.toString() ?? "");
+
+          if (!isDirty || savedSuccessMap[m.id]) {
+            if (local.home !== serverHome || local.away !== serverAway) {
+              nextScores[m.id] = { home: serverHome, away: serverAway };
+              changed = true;
+            }
+          }
+        }
+      });
+      return changed ? nextScores : prev;
+    });
+
+    setPredictedWinners((prev) => {
+      let changed = false;
+      const nextWinners = { ...prev };
+      matches.forEach((m) => {
+        const serverWinner = m.userPrediction?.predictedWinnerId || null;
+        const localWinner = prev[m.id];
+        if (localWinner !== serverWinner) {
+          const score = scores[m.id];
+          const isScoreDirty = score && (
+            score.home !== (m.userPrediction?.homeScore.toString() ?? "") ||
+            score.away !== (m.userPrediction?.awayScore.toString() ?? "")
+          );
+          const isWinnerDirty = localWinner !== (m.userPrediction?.predictedWinnerId ?? null);
+          const isDirty = isScoreDirty || isWinnerDirty;
+
+          if (!isDirty || savedSuccessMap[m.id]) {
+            nextWinners[m.id] = serverWinner;
+            changed = true;
+          }
+        }
+      });
+      return changed ? nextWinners : prev;
+    });
+  }, [matches, scores, savedSuccessMap]);
 
   // Sync original bonus values on prop change
   useEffect(() => {
@@ -659,9 +722,23 @@ export function PredictionsView({
     if (activeTab === "groups" && groupFilter !== "TODOS" && m.group !== groupFilter) return false;
 
     // 3. Filtrar por estado de la predicción
-    const hasPred = scores[m.id].home !== "" && scores[m.id].away !== "";
-    if (statusFilter === "PRONOSTICADOS" && !hasPred) return false;
-    if (statusFilter === "PENDIENTES" && hasPred) return false;
+    const hasSavedPred = m.userPrediction !== null;
+    if (statusFilter === "PRONOSTICADOS" && !hasSavedPred) return false;
+    if (statusFilter === "PENDIENTES") {
+      if (hasSavedPred) return false;
+      const isPast = new Date() > new Date(m.date);
+      if (isPast) return false;
+    }
+
+    // 3.5 Filtro de Fecha: Solo hoy
+    if (onlyTodayFilter) {
+      const matchDateStr = m.date.toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        timeZone: "America/Argentina/Buenos_Aires"
+      });
+      if (matchDateStr !== todayStr) return false;
+    }
 
     // 4. Filtrar por término de búsqueda (equipos o estadios)
     if (searchTerm.trim() !== "") {
@@ -680,6 +757,7 @@ export function PredictionsView({
     setSearchTerm("");
     setGroupFilter("TODOS");
     setStatusFilter("TODOS");
+    setOnlyTodayFilter(false);
   };
 
   // Fecha del primer partido para verificar bloqueo de especiales (15 minutos antes del inicio)
@@ -841,16 +919,32 @@ export function PredictionsView({
                 </div>
               )}
 
-              <div className={`w-full md:w-44 flex-shrink-0 ${activeTab === "groups" ? "md:ml-auto" : ""}`}>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
-                >
-                  <option value="TODOS">Todos los pronósticos</option>
-                  <option value="PRONOSTICADOS">Pronosticados</option>
-                  <option value="PENDIENTES">Pendientes</option>
-                </select>
+              <div className={`flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto ${activeTab === "groups" ? "md:ml-auto" : ""}`}>
+                {/* Checkbox Solo Hoy */}
+                <div className="flex items-center gap-2 cursor-pointer select-none self-start sm:self-auto flex-shrink-0">
+                  <input
+                    id="onlyTodayFilterCheckbox"
+                    type="checkbox"
+                    checked={onlyTodayFilter}
+                    onChange={(e) => setOnlyTodayFilter(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary bg-slate-950 cursor-pointer"
+                  />
+                  <label htmlFor="onlyTodayFilterCheckbox" className="text-xs font-semibold text-slate-350 cursor-pointer whitespace-nowrap">
+                    Solo hoy
+                  </label>
+                </div>
+
+                <div className="w-full md:w-44 flex-shrink-0">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="TODOS">Todos los pronósticos</option>
+                    <option value="PRONOSTICADOS">Pronosticados</option>
+                    <option value="PENDIENTES">Pendientes</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>

@@ -336,15 +336,41 @@ const TOP_TEAMS = [
 ];
 
 export function InfoMundialView({
-  finishedMatches = [],
+  matches = [],
+  teams = [],
   scorers = [],
 }: {
-  finishedMatches?: any[];
+  matches?: any[];
+  teams?: any[];
   scorers?: any[];
 }) {
   const [activeTab, setActiveTab] = useState<"stadiums" | "history" | "trivia" | "results">("results");
   const [selectedStadium, setSelectedStadium] = useState<Stadium | null>(null);
   const [stadiumFilter, setStadiumFilter] = useState<string>("ALL");
+
+  const [countryFilter, setCountryFilter] = useState<string>("ALL");
+  const [showAllMatches, setShowAllMatches] = useState<boolean>(false);
+
+  const visibleMatches = React.useMemo(() => {
+    return matches.filter((m) => {
+      const hasResult = m.status === "FINISHED" || (m.homeScore !== null && m.awayScore !== null);
+
+      if (countryFilter === "ALL") {
+        return hasResult;
+      } else {
+        const isHome = m.homeTeam?.id === countryFilter;
+        const isAway = m.awayTeam?.id === countryFilter;
+        if (!isHome && !isAway) return false;
+
+        if (showAllMatches) {
+          return true;
+        } else {
+          return hasResult;
+        }
+      }
+    });
+  }, [matches, countryFilter, showAllMatches]);
+
 
   const filteredStadiums = STADIUMS.filter((stadium) => {
     if (stadiumFilter === "ALL") return true;
@@ -844,24 +870,66 @@ export function InfoMundialView({
           {/* Columna Izquierda: Resultados oficiales de los partidos jugados */}
           <div className="lg:col-span-2 space-y-6">
             <div className="glass-panel border border-border rounded-2xl p-6 bg-slate-900/10 space-y-4">
-              <h3 className="text-lg font-black tracking-tight text-slate-100 uppercase flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-primary" />
-                Resultados Oficiales
-              </h3>
-              <p className="text-sm text-slate-400">
-                Marcadores reales cargados al instante. Los puntos y rankings del prode se recalculan automáticamente al finalizar cada partido.
-              </p>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black tracking-tight text-slate-100 uppercase flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-primary" />
+                    Resultados Oficiales
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    Marcadores reales cargados al instante. Los puntos y rankings del prode se recalculan automáticamente al finalizar cada partido.
+                  </p>
+                </div>
+                
+                {/* Filtros de Resultados */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+                  <div className="relative w-full sm:w-48">
+                    <select
+                      value={countryFilter}
+                      onChange={(e) => {
+                        setCountryFilter(e.target.value);
+                        if (e.target.value === "ALL") {
+                          setShowAllMatches(false);
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="ALL">Todos los países</option>
+                      {teams.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {countryFilter !== "ALL" && (
+                    <div className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        id="showAllMatchesCheckbox"
+                        type="checkbox"
+                        checked={showAllMatches}
+                        onChange={(e) => setShowAllMatches(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary bg-slate-950 cursor-pointer"
+                      />
+                      <label htmlFor="showAllMatchesCheckbox" className="text-xs font-semibold text-slate-300 cursor-pointer whitespace-nowrap">
+                        Incluir partidos sin resultado
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {finishedMatches.length === 0 ? (
+            {visibleMatches.length === 0 ? (
               <div className="glass-panel border border-border rounded-2xl p-12 text-center text-slate-400">
                 <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4 animate-pulse" />
-                <p className="text-base font-semibold">No hay partidos jugados todavía.</p>
-                <p className="text-xs text-slate-500 mt-1">Los resultados oficiales se mostrarán aquí una vez que comiencen los partidos.</p>
+                <p className="text-base font-semibold">No se encontraron partidos.</p>
+                <p className="text-xs text-slate-500 mt-1">Los partidos que coincidan con los filtros seleccionados aparecerán aquí.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {finishedMatches.map((m) => {
+                {visibleMatches.map((m) => {
                   const matchDate = new Date(m.date);
                   const formattedDate = matchDate.toLocaleDateString("es-AR", {
                     day: "numeric",
@@ -912,7 +980,7 @@ export function InfoMundialView({
 
                         {/* Goles Local */}
                         <div className="col-span-1 text-2xl font-black text-white">
-                          {m.homeScore}
+                          {m.homeScore !== null ? m.homeScore : "-"}
                         </div>
 
                         {/* Separador */}
@@ -922,7 +990,7 @@ export function InfoMundialView({
 
                         {/* Goles Visitante */}
                         <div className="col-span-1 text-2xl font-black text-white">
-                          {m.awayScore}
+                          {m.awayScore !== null ? m.awayScore : "-"}
                         </div>
 
                         {/* Equipo Visitante */}

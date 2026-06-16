@@ -206,7 +206,7 @@ async function main() {
         case "G": return { dayDelta: 4, hour: 22 }; // IRN vs NZL: Jun 15, 22:00
         case "H": return { dayDelta: 4, hour: 19 }; // KSA vs URU: Jun 15, 19:00
         case "I": return { dayDelta: 5, hour: 16 }; // IRQ vs NOR: Jun 16, 16:00
-        case "J": return { dayDelta: 5, hour: 22 }; // ARG vs ALG: Jun 16, 22:00
+        case "J": return { dayDelta: 6, hour: 1 }; // AUT vs JOR: Jun 17, 01:00 (instead of Jun 16, 22:00)
         case "K": return { dayDelta: 6, hour: 23 }; // UZB vs COL: Jun 17, 23:00
         case "L": return { dayDelta: 6, hour: 20 }; // GHA vs PAN: Jun 17, 20:00
       }
@@ -226,7 +226,7 @@ async function main() {
         case "I": return { dayDelta: 11, hour: 13 };
         case "J": return { dayDelta: 11, hour: 19 };
         case "K": return { dayDelta: 8, hour: 19 };
-        case "L": return { dayDelta: 6, hour: 19 };
+        case "L": return { dayDelta: 12, hour: 16 }; // ENG vs GHA: Jun 23, 16:00 (swapped date delta from 6 to 12)
       }
     }
     if (matchIndex === 3) {
@@ -242,7 +242,7 @@ async function main() {
         case "I": return { dayDelta: 11, hour: 16 };
         case "J": return { dayDelta: 11, hour: 22 };
         case "K": return { dayDelta: 8, hour: 22 };
-        case "L": return { dayDelta: 6, hour: 22 };
+        case "L": return { dayDelta: 12, hour: 19 }; // CRO vs PAN: Jun 23, 19:00 (swapped date delta from 6 to 12)
       }
     }
 
@@ -260,7 +260,7 @@ async function main() {
         case "I": return { dayDelta: 14, hour: 19 };
         case "J": return { dayDelta: 12, hour: 19 };
         case "K": return { dayDelta: 14, hour: 22 };
-        case "L": return { dayDelta: 12, hour: 22 };
+        case "L": return { dayDelta: 16, hour: 17 }; // PAN vs ENG: Jun 27, 17:00 (swapped date delta from 12 to 16)
       }
     }
     // matchIndex === 5
@@ -276,7 +276,7 @@ async function main() {
       case "I": return { dayDelta: 14, hour: 22 };
       case "J": return { dayDelta: 12, hour: 22 };
       case "K": return { dayDelta: 14, hour: 23 };
-      case "L": return { dayDelta: 12, hour: 23 };
+      case "L": return { dayDelta: 16, hour: 17 }; // CRO vs GHA: Jun 27, 17:00 (swapped date delta from 12 to 16)
     }
     return { dayDelta: 0, hour: 12 };
   }

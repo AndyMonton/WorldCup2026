@@ -10,11 +10,8 @@ export default async function InfoMundialPage() {
     redirect("/login");
   }
 
-  // 1. Obtener partidos jugados (finalizados) en orden cronológico
-  const finishedMatches = await prisma.match.findMany({
-    where: {
-      status: MatchStatus.FINISHED,
-    },
+  // 1. Obtener todos los partidos en orden cronológico
+  const matches = await prisma.match.findMany({
     include: {
       homeTeam: true,
       awayTeam: true,
@@ -24,7 +21,14 @@ export default async function InfoMundialPage() {
     },
   });
 
-  // 2. Obtener lista de goleadores ordenada por goles desc, luego alfabéticamente asc
+  // 2. Obtener lista de todos los equipos ordenados alfabéticamente
+  const teams = await prisma.team.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  // 3. Obtener lista de goleadores ordenada por goles desc, luego alfabéticamente asc
   const scorers = await prisma.scorer.findMany({
     include: {
       team: true,
@@ -36,12 +40,13 @@ export default async function InfoMundialPage() {
   });
 
   // Serializar campos Date a string para prevenir advertencias de hidratación en Next.js
-  const serializedMatches = finishedMatches.map((m) => ({
+  const serializedMatches = matches.map((m) => ({
     ...m,
     date: m.date.toISOString(),
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),
   }));
 
-  return <InfoMundialView finishedMatches={serializedMatches} scorers={scorers} />;
+  return <InfoMundialView matches={serializedMatches} teams={teams} scorers={scorers} />;
 }
+
