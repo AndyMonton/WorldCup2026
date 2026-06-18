@@ -336,14 +336,14 @@ const TOP_TEAMS = [
 ];
 
 const CARD_COLORS = [
-  { bg: "!bg-emerald-950/20 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-950/30 hover:!shadow-emerald-500/5", badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-  { bg: "!bg-indigo-950/20 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-950/30 hover:!shadow-indigo-500/5", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  { bg: "!bg-rose-950/20 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-950/30 hover:!shadow-rose-500/5", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
-  { bg: "!bg-amber-950/20 !border-amber-500/20 hover:!border-amber-500/40 hover:!bg-amber-950/30 hover:!shadow-amber-500/5", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  { bg: "!bg-purple-950/20 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-950/30 hover:!shadow-purple-500/5", badge: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
-  { bg: "!bg-cyan-950/20 !border-cyan-500/20 hover:!border-cyan-500/40 hover:!bg-cyan-950/30 hover:!shadow-cyan-500/5", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" },
-  { bg: "!bg-teal-950/20 !border-teal-500/20 hover:!border-teal-500/40 hover:!bg-teal-950/30 hover:!shadow-teal-500/5", badge: "bg-teal-500/10 text-teal-400 border-teal-500/30" },
-  { bg: "!bg-violet-950/20 !border-violet-500/20 hover:!border-violet-500/40 hover:!bg-violet-955/30 hover:!shadow-violet-500/5", badge: "bg-violet-500/10 text-violet-400 border-violet-500/30" },
+  { bg: "rgba(16, 185, 129, 0.15)", border: "rgba(16, 185, 129, 0.25)", hoverBg: "rgba(16, 185, 129, 0.25)", hoverBorder: "rgba(16, 185, 129, 0.45)", badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
+  { bg: "rgba(99, 102, 241, 0.15)", border: "rgba(99, 102, 241, 0.25)", hoverBg: "rgba(99, 102, 241, 0.25)", hoverBorder: "rgba(99, 102, 241, 0.45)", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
+  { bg: "rgba(244, 63, 94, 0.15)", border: "rgba(244, 63, 94, 0.25)", hoverBg: "rgba(244, 63, 94, 0.25)", hoverBorder: "rgba(244, 63, 94, 0.45)", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
+  { bg: "rgba(245, 158, 11, 0.15)", border: "rgba(245, 158, 11, 0.25)", hoverBg: "rgba(245, 158, 11, 0.25)", hoverBorder: "rgba(245, 158, 11, 0.45)", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
+  { bg: "rgba(168, 85, 247, 0.15)", border: "rgba(168, 85, 247, 0.25)", hoverBg: "rgba(168, 85, 247, 0.25)", hoverBorder: "rgba(168, 85, 247, 0.45)", badge: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  { bg: "rgba(6, 182, 212, 0.15)", border: "rgba(6, 182, 212, 0.25)", hoverBg: "rgba(6, 182, 212, 0.25)", hoverBorder: "rgba(6, 182, 212, 0.45)", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" },
+  { bg: "rgba(20, 184, 166, 0.15)", border: "rgba(20, 184, 166, 0.25)", hoverBg: "rgba(20, 184, 166, 0.25)", hoverBorder: "rgba(20, 184, 166, 0.45)", badge: "bg-teal-500/10 text-teal-400 border-teal-500/30" },
+  { bg: "rgba(139, 92, 246, 0.15)", border: "rgba(139, 92, 246, 0.25)", hoverBg: "rgba(139, 92, 246, 0.25)", hoverBorder: "rgba(139, 92, 246, 0.45)", badge: "bg-violet-500/10 text-violet-400 border-violet-500/30" },
 ];
 
 export function InfoMundialView({
@@ -1004,7 +1004,11 @@ export function InfoMundialView({
                   return (
                     <div
                       key={m.id}
-                      className={`glass-panel border rounded-2xl p-5 transition-all shadow-md group ${cardColor.bg}`}
+                      style={{
+                        backgroundColor: cardColor.bg,
+                        borderColor: cardColor.border,
+                      }}
+                      className="glass-panel border rounded-2xl p-5 transition-all shadow-md group hover:bg-slate-900/40"
                     >
                       {/* Cabecera de la tarjeta: Etapa y Fecha */}
                       <div className="flex justify-between items-center text-xs text-slate-400 border-b border-border/30 pb-3 mb-4 font-mono">
