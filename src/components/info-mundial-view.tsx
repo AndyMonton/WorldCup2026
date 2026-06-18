@@ -888,7 +888,7 @@ export function InfoMundialView({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna Izquierda: Resultados oficiales de los partidos jugados */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="glass-panel border border-border rounded-2xl p-6 bg-slate-900/10 space-y-4">
+            <div className="glass-panel border border-border rounded-2xl p-6 bg-slate-900/10 space-y-4 relative z-20">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h3 className="text-lg font-black tracking-tight text-slate-100 uppercase flex items-center gap-2">
