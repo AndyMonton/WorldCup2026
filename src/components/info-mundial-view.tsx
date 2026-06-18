@@ -336,14 +336,14 @@ const TOP_TEAMS = [
 ];
 
 const CARD_COLORS = [
-  { bg: "bg-emerald-950/20 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:shadow-emerald-500/5", badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
-  { bg: "bg-indigo-950/20 border-indigo-500/20 hover:border-indigo-500/40 hover:bg-indigo-950/30 hover:shadow-indigo-500/5", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
-  { bg: "bg-rose-950/20 border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-950/30 hover:shadow-rose-500/5", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
-  { bg: "bg-amber-950/20 border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-950/30 hover:shadow-amber-500/5", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
-  { bg: "bg-purple-950/20 border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-950/30 hover:shadow-purple-500/5", badge: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
-  { bg: "bg-cyan-950/20 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-950/30 hover:shadow-cyan-500/5", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" },
-  { bg: "bg-teal-950/20 border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-950/30 hover:shadow-teal-500/5", badge: "bg-teal-500/10 text-teal-400 border-teal-500/30" },
-  { bg: "bg-violet-950/20 border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-950/30 hover:shadow-violet-500/5", badge: "bg-violet-500/10 text-violet-400 border-violet-500/30" },
+  { bg: "!bg-emerald-950/20 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-950/30 hover:!shadow-emerald-500/5", badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
+  { bg: "!bg-indigo-950/20 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-950/30 hover:!shadow-indigo-500/5", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
+  { bg: "!bg-rose-950/20 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-950/30 hover:!shadow-rose-500/5", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
+  { bg: "!bg-amber-950/20 !border-amber-500/20 hover:!border-amber-500/40 hover:!bg-amber-950/30 hover:!shadow-amber-500/5", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
+  { bg: "!bg-purple-950/20 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-950/30 hover:!shadow-purple-500/5", badge: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  { bg: "!bg-cyan-950/20 !border-cyan-500/20 hover:!border-cyan-500/40 hover:!bg-cyan-950/30 hover:!shadow-cyan-500/5", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" },
+  { bg: "!bg-teal-950/20 !border-teal-500/20 hover:!border-teal-500/40 hover:!bg-teal-950/30 hover:!shadow-teal-500/5", badge: "bg-teal-500/10 text-teal-400 border-teal-500/30" },
+  { bg: "!bg-violet-950/20 !border-violet-500/20 hover:!border-violet-500/40 hover:!bg-violet-955/30 hover:!shadow-violet-500/5", badge: "bg-violet-500/10 text-violet-400 border-violet-500/30" },
 ];
 
 export function InfoMundialView({
@@ -361,6 +361,7 @@ export function InfoMundialView({
 
   const [countryFilter, setCountryFilter] = useState<string>("ALL");
   const [countrySearch, setCountrySearch] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [showAllMatches, setShowAllMatches] = useState<boolean>(false);
 
   const visibleMatches = React.useMemo(() => {
@@ -894,53 +895,66 @@ export function InfoMundialView({
                 
                 {/* Filtros de Resultados */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <div className="relative w-full sm:w-40">
-                      <input
-                        type="text"
-                        placeholder="🔍 Buscar país..."
-                        value={countrySearch}
-                        onChange={(e) => {
-                          const query = e.target.value;
-                          setCountrySearch(query);
-                          // Auto-select exact match
-                          const matched = teams.find((t) => t.name.toLowerCase() === query.toLowerCase());
+                  <div className="relative w-full sm:w-60">
+                    <input
+                      type="text"
+                      placeholder="🔍 Buscar o elegir país..."
+                      value={countrySearch}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setIsDropdownOpen(false), 250)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCountrySearch(val);
+                        setIsDropdownOpen(true);
+                        
+                        // If query is empty, show all countries
+                        if (val.trim() === "") {
+                          setCountryFilter("ALL");
+                        } else {
+                          // If there's an exact match, select it
+                          const matched = teams.find((t) => t.name.toLowerCase() === val.trim().toLowerCase());
                           if (matched) {
                             setCountryFilter(matched.id);
                           }
-                        }}
-                        className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none"
-                      />
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none cursor-pointer"
+                    />
+                    <div className="absolute right-3 top-2.5 pointer-events-none text-slate-500 text-[10px]">
+                      ▼
                     </div>
-                    
-                    <div className="relative w-full sm:w-44">
-                      <select
-                        value={countryFilter}
-                        onChange={(e) => {
-                          setCountryFilter(e.target.value);
-                          if (e.target.value === "ALL") {
+                    {isDropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-slate-950 border border-border rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                        <div
+                          className={`px-3 py-2 text-xs hover:bg-slate-900 cursor-pointer text-slate-300 ${countryFilter === "ALL" ? "bg-primary/10 text-primary font-bold" : ""}`}
+                          onMouseDown={() => {
+                            setCountryFilter("ALL");
                             setCountrySearch("");
-                          } else {
-                            const team = teams.find((t) => t.id === e.target.value);
-                            if (team) {
-                              setCountrySearch(team.name);
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="ALL">Todos los países</option>
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          Todos los países
+                        </div>
                         {teams
                           .filter((t) =>
                             t.name.toLowerCase().includes(countrySearch.toLowerCase())
                           )
                           .map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.name}
-                            </option>
+                            <div
+                              key={t.id}
+                              className={`px-3 py-2 text-xs hover:bg-slate-900 cursor-pointer text-slate-300 flex items-center justify-between ${countryFilter === t.id ? "bg-primary/10 text-primary font-bold" : ""}`}
+                              onMouseDown={() => {
+                                setCountryFilter(t.id);
+                                setCountrySearch(t.name);
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <span>{t.name}</span>
+                              {countryFilter === t.id && <span className="text-primary font-bold">✓</span>}
+                            </div>
                           ))}
-                      </select>
-                    </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2 cursor-pointer select-none">
