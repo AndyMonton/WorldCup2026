@@ -93,21 +93,29 @@ body {
 
 /* Clases utilitarias personalizadas para efectos premium (Glassmorphism) */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .dark .glass-panel {
-  background: rgba(19, 26, 44, 0.6);
+  background-color: rgba(19, 26, 44, 0.6);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Permitir que clases personalizadas sobreescriban el fondo en dark mode */
-.dark .glass-panel[class*="bg-"] {
+.dark .glass-panel[class*=" bg-"], .dark .glass-panel[class^="bg-"] {
   background: var(--tw-bg-opacity, 1) !important;
   background-color: inherit !important;
+}
+
+.card-colored {
+  transition: all 0.3s ease;
+}
+.card-colored:hover {
+  background-color: var(--hover-bg) !important;
+  border-color: var(--hover-border) !important;
 }
 
 

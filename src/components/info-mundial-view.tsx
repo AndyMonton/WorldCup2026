@@ -1007,8 +1007,10 @@ export function InfoMundialView({
                       style={{
                         backgroundColor: cardColor.bg,
                         borderColor: cardColor.border,
-                      }}
-                      className="glass-panel border rounded-2xl p-5 transition-all shadow-md group hover:bg-slate-900/40"
+                        "--hover-bg": cardColor.hoverBg,
+                        "--hover-border": cardColor.hoverBorder,
+                      } as React.CSSProperties}
+                      className="glass-panel border rounded-2xl p-5 transition-all shadow-md group card-colored"
                     >
                       {/* Cabecera de la tarjeta: Etapa y Fecha */}
                       <div className="flex justify-between items-center text-xs text-slate-400 border-b border-border/30 pb-3 mb-4 font-mono">

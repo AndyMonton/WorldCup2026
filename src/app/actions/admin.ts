@@ -1008,16 +1008,15 @@ function parseScorersString(scorersStr: string | null): { name: string; goals: n
         if (nameCorrections[name]) {
           name = nameCorrections[name];
         }
-        const digitMatches = trimmed.match(/\d+/g);
-        const goalsCount = digitMatches ? digitMatches.length : 1;
+        // Cada parte en el array de goleadores representa exactamente 1 gol del jugador
+        const goalsCount = 1;
 
         scorersMap[name] = (scorersMap[name] || 0) + goalsCount;
         lastPlayerName = name;
       }
     } else {
       if (lastPlayerName) {
-        const digitMatches = trimmed.match(/\d+/g);
-        const goalsCount = digitMatches ? digitMatches.length : 1;
+        const goalsCount = 1;
         scorersMap[lastPlayerName] = (scorersMap[lastPlayerName] || 0) + goalsCount;
       }
     }
