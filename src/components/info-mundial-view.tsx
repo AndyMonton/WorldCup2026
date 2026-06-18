@@ -1048,7 +1048,7 @@ export function InfoMundialView({
                         </div>
 
                         {/* Goles Local */}
-                        <div className="col-span-1 text-2xl font-black text-white">
+                        <div className="col-span-1 text-2xl font-black text-slate-900 dark:text-white">
                           {m.homeScore !== null ? m.homeScore : "-"}
                         </div>
 
@@ -1058,7 +1058,7 @@ export function InfoMundialView({
                         </div>
 
                         {/* Goles Visitante */}
-                        <div className="col-span-1 text-2xl font-black text-white">
+                        <div className="col-span-1 text-2xl font-black text-slate-900 dark:text-white">
                           {m.awayScore !== null ? m.awayScore : "-"}
                         </div>
 
