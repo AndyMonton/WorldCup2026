@@ -364,6 +364,13 @@ export function InfoMundialView({
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [showAllMatches, setShowAllMatches] = useState<boolean>(false);
 
+  const normalizeText = (text: string) => {
+    return text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  };
+
   const visibleMatches = React.useMemo(() => {
     return matches.filter((m) => {
       const hasResult = m.status === "FINISHED" || (m.homeScore !== null && m.awayScore !== null);
@@ -912,7 +919,7 @@ export function InfoMundialView({
                           setCountryFilter("ALL");
                         } else {
                           // If there's an exact match, select it
-                          const matched = teams.find((t) => t.name.toLowerCase() === val.trim().toLowerCase());
+                          const matched = teams.find((t) => normalizeText(t.name) === normalizeText(val.trim()));
                           if (matched) {
                             setCountryFilter(matched.id);
                           }
@@ -937,7 +944,7 @@ export function InfoMundialView({
                         </div>
                         {teams
                           .filter((t) =>
-                            t.name.toLowerCase().includes(countrySearch.toLowerCase())
+                            normalizeText(t.name).includes(normalizeText(countrySearch))
                           )
                           .map((t) => (
                             <div
