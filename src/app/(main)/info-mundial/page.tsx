@@ -10,11 +10,16 @@ export default async function InfoMundialPage() {
     redirect("/login");
   }
 
-  // 1. Obtener todos los partidos en orden cronológico
+  // 1. Obtener todos los partidos en orden cronológico, incluyendo la predicción del usuario actual
   const matches = await prisma.match.findMany({
     include: {
       homeTeam: true,
       awayTeam: true,
+      predictions: {
+        where: {
+          userId: session.user.id,
+        },
+      },
     },
     orderBy: {
       date: "asc",
@@ -40,13 +45,25 @@ export default async function InfoMundialPage() {
   });
 
   // Serializar campos Date a string para prevenir advertencias de hidratación en Next.js
-  const serializedMatches = matches.map((m) => ({
-    ...m,
-    date: m.date.toISOString(),
-    createdAt: m.createdAt.toISOString(),
-    updatedAt: m.updatedAt.toISOString(),
-  }));
+  const serializedMatches = matches.map((m) => {
+    const pred = m.predictions?.[0] || null;
+    return {
+      ...m,
+      date: m.date.toISOString(),
+      createdAt: m.createdAt.toISOString(),
+      updatedAt: m.updatedAt.toISOString(),
+      userPrediction: pred
+        ? {
+            ...pred,
+            createdAt: pred.createdAt.toISOString(),
+            updatedAt: pred.updatedAt.toISOString(),
+          }
+        : null,
+      predictions: undefined, // Remover array de predicciones crudo
+    };
+  });
 
   return <InfoMundialView matches={serializedMatches} teams={teams} scorers={scorers} />;
 }
+
 

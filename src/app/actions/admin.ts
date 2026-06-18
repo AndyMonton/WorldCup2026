@@ -922,10 +922,65 @@ export async function updateLeaguePaymentRequirement(leagueId: string, requiresP
   }
 }
 
-/**
- * Parsea la cadena de texto de goleadores devuelta por la API (ej: "{“J. Quiñones 9'”,”R. Jiménez 67'”}")
- * y devuelve un array con los nombres y cantidad de goles de cada jugador.
- */
+const nameCorrections: Record<string, string> = {
+  "Livnl Msi": "Lionel Messi",
+  "Arling Halnd": "Erling Haaland",
+  "K. Mbappé": "Kylian Mbappé",
+  "Jvd Blingham": "Jude Bellingham",
+  "Markvs Rshfvrd": "Marcus Rashford",
+  "Hri Kin": "Harry Kane",
+  "Ptar Mvsa": "Petar Musa",
+  "Martin Batvrina": "Martin Baturina",
+  "Abas Bk Fiz Allh Af": "Abbosbek Fayzullaev",
+  "Dnil Mvnvz": "Daniel Muñoz",
+  "Lviiz Diaz": "Luis Díaz",
+  "Khamintvn Kampaz": "Jaminton Campaz",
+  "Abdallh Alamri": "Abdulelah Al-Amri",
+  "Maksimilianv Araivkhv": "Maximiliano Araújo",
+  "Rvmanv Ashmid": "Romano Schmid",
+  "Izn Alarb": "Yazan Al-Arab",
+  "Ali Avlvan": "Ali Olwan",
+  "Aimn Hsin": "Aymen Hussein",
+  "Kalb Iirnki": "Caleb Wiley",
+  "Ramin Rzaiian": "Ramin Rezaeian",
+  "Mohamed Mhbi": "Mohammad Mohebi",
+  "Ali Jast": "Elijah Just",
+  "J. Quiñones": "Julián Quiñones",
+  "R. Jiménez": "Raúl Jiménez",
+  "Felix Nmecha": "Felix Nmecha",
+  "N. Schlotterbeck": "Nico Schlotterbeck",
+  "K. Havertz": "Kai Havertz",
+  "J. Musiala": "Jamal Musiala",
+  "N. Brown": "Noah Brown",
+  "D. Undav": "Deniz Undav",
+  "L. Comenencia": "Livano Comenencia",
+  "I.B. Hwang": "In-beom Hwang",
+  "H.G. Oh": "Hyeon-gyu Oh",
+  "L. Krejčí": "Ladislav Krejčí",
+  "C. Larin": "Cyle Larin",
+  "Jovo Lukić": "Jovo Lukić",
+  "B. Khoukhi": "Boualem Khoukhi",
+  "Breel Embolo": "Breel Embolo",
+  "J. McGinn": "John McGinn",
+  "V. Júnior": "Vinícius Júnior",
+  "I. Saibari": "Ismael Saibari",
+  "Nestory Irankunda": "Nestory Irankunda",
+  "C. Metcalfe": "Connor Metcalfe",
+  "J. Neves": "João Neves",
+  "Y. Wissa": "Yoane Wissa",
+  "B. Barcola": "Bradley Barcola",
+  "I. Mbaye": "Ibrahima Mbaye",
+  "Virgil van Dijk": "Virgil van Dijk",
+  "C. Summerville": "Crysencio Summerville",
+  "K. Nakamura": "Keito Nakamura",
+  "K. Ogawa": "Koki Ogawa",
+  "Y.Ayari": "Yasin Ayari",
+  "A. Isak": "Alexander Isak",
+  "V. Gyökeres": "Viktor Gyökeres",
+  "M. Svanberg": "Mattias Svanberg",
+  "O. Rekik": "Omar Rekik"
+};
+
 function parseScorersString(scorersStr: string | null): { name: string; goals: number }[] {
   if (!scorersStr || scorersStr === "null" || scorersStr.trim() === "") {
     return [];
@@ -948,7 +1003,11 @@ function parseScorersString(scorersStr: string | null): { name: string; goals: n
     if (hasLetters) {
       const match = trimmed.match(/^([^0-9]+)/);
       if (match) {
-        const name = match[1].trim();
+        let name = match[1].trim();
+        // Aplicar corrección de nombre si existe
+        if (nameCorrections[name]) {
+          name = nameCorrections[name];
+        }
         const digitMatches = trimmed.match(/\d+/g);
         const goalsCount = digitMatches ? digitMatches.length : 1;
 
@@ -966,6 +1025,7 @@ function parseScorersString(scorersStr: string | null): { name: string; goals: n
 
   return Object.entries(scorersMap).map(([name, goals]) => ({ name, goals }));
 }
+
 
 /**
  * Limpia y recalcula por completo la tabla de goleadores (Scorer) a partir de los

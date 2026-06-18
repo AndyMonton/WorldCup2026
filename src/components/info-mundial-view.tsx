@@ -335,6 +335,17 @@ const TOP_TEAMS = [
   { country: "Inglaterra", titles: 1, years: "1966" }
 ];
 
+const CARD_COLORS = [
+  { bg: "bg-emerald-950/20 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-950/30 hover:shadow-emerald-500/5", badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" },
+  { bg: "bg-indigo-950/20 border-indigo-500/20 hover:border-indigo-500/40 hover:bg-indigo-950/30 hover:shadow-indigo-500/5", badge: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30" },
+  { bg: "bg-rose-950/20 border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-950/30 hover:shadow-rose-500/5", badge: "bg-rose-500/10 text-rose-400 border-rose-500/30" },
+  { bg: "bg-amber-950/20 border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-950/30 hover:shadow-amber-500/5", badge: "bg-amber-500/10 text-amber-400 border-amber-500/30" },
+  { bg: "bg-purple-950/20 border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-950/30 hover:shadow-purple-500/5", badge: "bg-purple-500/10 text-purple-400 border-purple-500/30" },
+  { bg: "bg-cyan-950/20 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-950/30 hover:shadow-cyan-500/5", badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" },
+  { bg: "bg-teal-950/20 border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-950/30 hover:shadow-teal-500/5", badge: "bg-teal-500/10 text-teal-400 border-teal-500/30" },
+  { bg: "bg-violet-950/20 border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-950/30 hover:shadow-violet-500/5", badge: "bg-violet-500/10 text-violet-400 border-violet-500/30" },
+];
+
 export function InfoMundialView({
   matches = [],
   teams = [],
@@ -349,27 +360,27 @@ export function InfoMundialView({
   const [stadiumFilter, setStadiumFilter] = useState<string>("ALL");
 
   const [countryFilter, setCountryFilter] = useState<string>("ALL");
+  const [countrySearch, setCountrySearch] = useState<string>("");
   const [showAllMatches, setShowAllMatches] = useState<boolean>(false);
 
   const visibleMatches = React.useMemo(() => {
     return matches.filter((m) => {
       const hasResult = m.status === "FINISHED" || (m.homeScore !== null && m.awayScore !== null);
 
-      if (countryFilter === "ALL") {
-        return hasResult;
-      } else {
+      if (!showAllMatches && !hasResult) {
+        return false;
+      }
+
+      if (countryFilter !== "ALL") {
         const isHome = m.homeTeam?.id === countryFilter;
         const isAway = m.awayTeam?.id === countryFilter;
-        if (!isHome && !isAway) return false;
-
-        if (showAllMatches) {
-          return true;
-        } else {
-          return hasResult;
-        }
+        return isHome || isAway;
       }
+
+      return true;
     });
   }, [matches, countryFilter, showAllMatches]);
+
 
 
   const filteredStadiums = STADIUMS.filter((stadium) => {
@@ -883,40 +894,67 @@ export function InfoMundialView({
                 
                 {/* Filtros de Resultados */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-                  <div className="relative w-full sm:w-48">
-                    <select
-                      value={countryFilter}
-                      onChange={(e) => {
-                        setCountryFilter(e.target.value);
-                        if (e.target.value === "ALL") {
-                          setShowAllMatches(false);
-                        }
-                      }}
-                      className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
-                    >
-                      <option value="ALL">Todos los países</option>
-                      {teams.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-40">
+                      <input
+                        type="text"
+                        placeholder="🔍 Buscar país..."
+                        value={countrySearch}
+                        onChange={(e) => {
+                          const query = e.target.value;
+                          setCountrySearch(query);
+                          // Auto-select exact match
+                          const matched = teams.find((t) => t.name.toLowerCase() === query.toLowerCase());
+                          if (matched) {
+                            setCountryFilter(matched.id);
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none"
+                      />
+                    </div>
+                    
+                    <div className="relative w-full sm:w-44">
+                      <select
+                        value={countryFilter}
+                        onChange={(e) => {
+                          setCountryFilter(e.target.value);
+                          if (e.target.value === "ALL") {
+                            setCountrySearch("");
+                          } else {
+                            const team = teams.find((t) => t.id === e.target.value);
+                            if (team) {
+                              setCountrySearch(team.name);
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-slate-950 border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-foreground text-xs outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="ALL">Todos los países</option>
+                        {teams
+                          .filter((t) =>
+                            t.name.toLowerCase().includes(countrySearch.toLowerCase())
+                          )
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
                   
-                  {countryFilter !== "ALL" && (
-                    <div className="flex items-center gap-2 cursor-pointer select-none">
-                      <input
-                        id="showAllMatchesCheckbox"
-                        type="checkbox"
-                        checked={showAllMatches}
-                        onChange={(e) => setShowAllMatches(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary bg-slate-950 cursor-pointer"
-                      />
-                      <label htmlFor="showAllMatchesCheckbox" className="text-xs font-semibold text-slate-300 cursor-pointer whitespace-nowrap">
-                        Incluir partidos sin resultado
-                      </label>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      id="showAllMatchesCheckbox"
+                      type="checkbox"
+                      checked={showAllMatches}
+                      onChange={(e) => setShowAllMatches(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary bg-slate-950 cursor-pointer"
+                    />
+                    <label htmlFor="showAllMatchesCheckbox" className="text-xs font-semibold text-slate-300 cursor-pointer whitespace-nowrap">
+                      Incluir partidos sin resultado
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -929,7 +967,7 @@ export function InfoMundialView({
               </div>
             ) : (
               <div className="space-y-4">
-                {visibleMatches.map((m) => {
+                {visibleMatches.map((m, index) => {
                   const matchDate = new Date(m.date);
                   const formattedDate = matchDate.toLocaleDateString("es-AR", {
                     day: "numeric",
@@ -947,14 +985,16 @@ export function InfoMundialView({
                     ? m.awayScorers.replace(/[{}]/g, "").replace(/[“”"']/g, "").split(",").join(", ")
                     : null;
 
+                  const cardColor = CARD_COLORS[index % CARD_COLORS.length];
+
                   return (
                     <div
                       key={m.id}
-                      className="glass-panel border border-border rounded-2xl p-5 bg-slate-955/40 hover:border-primary/30 transition-all shadow-md hover:shadow-primary/5 group"
+                      className={`glass-panel border rounded-2xl p-5 transition-all shadow-md group ${cardColor.bg}`}
                     >
                       {/* Cabecera de la tarjeta: Etapa y Fecha */}
                       <div className="flex justify-between items-center text-xs text-slate-400 border-b border-border/30 pb-3 mb-4 font-mono">
-                        <span className="bg-primary/10 border border-primary/20 text-primary px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                        <span className={`border px-2.5 py-0.5 rounded-full uppercase tracking-wider font-bold ${cardColor.badge}`}>
                           {m.stage === "GROUPS" ? `Grupo ${m.group || ""}` : m.stage}
                         </span>
                         <span>{formattedDate}</span>
@@ -1037,6 +1077,27 @@ export function InfoMundialView({
                               </div>
                             )}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Pronóstico del Usuario */}
+                      {m.userPrediction ? (
+                        <div className="mt-4 pt-2.5 border-t border-border/20 flex items-center justify-between text-xs text-slate-400">
+                          <span className="flex items-center gap-1 font-semibold text-slate-300">
+                            <span>🔮 Tu pronóstico:</span>
+                            <span className="font-extrabold text-primary font-mono bg-primary/5 px-2 py-0.5 rounded border border-primary/10">
+                              {m.userPrediction.homeScore} - {m.userPrediction.awayScore}
+                            </span>
+                          </span>
+                          {m.status === "FINISHED" && m.userPrediction.points !== null && (
+                            <span className="font-bold text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20 flex items-center gap-1">
+                              ⭐ +{m.userPrediction.points} {m.userPrediction.points === 1 ? "punto" : "puntos"}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-4 pt-2.5 border-t border-border/20 flex items-center justify-between text-xs text-slate-500 italic">
+                          <span>🔮 Sin pronóstico cargado</span>
                         </div>
                       )}
                     </div>
